@@ -1,8 +1,127 @@
-# Glass Home
+# Roche Home
 
-> **This checkout is Roche Home**, adapted for a 2018 Samsung UN55NU6900:
-> what changed, how to rebuild, and how to revert are in
-> [docs/ROCHE-HOME.md](docs/ROCHE-HOME.md).
+Our living-room TV's home screen: a build of [Glass Home](#glass-home-upstream)
+for a 2018 Samsung UN55NU6900 (Tizen 4.0), with Home Assistant built in. It
+shows the BabySteps log, the weather inside and out, local alerts, a library of
+public-domain movies, shows and books, the house's devices, and every streaming
+app, over photos that match the time of day and the sky outside.
+
+![Roche Home: BabySteps card, clock, outside and inside temperature, the next rocket launch and the dock](docs/screenshots/roche-home/home.jpg)
+
+<sub>Screenshots are this build at the TV's 1920×1080 in desktop Chrome with
+live data (the TV itself can't take screenshots; fonts differ slightly). The
+baby's name is blurred.</sub>
+
+Everything that differs from upstream, what was changed on the TV and the Pi,
+and how to undo it is in [docs/ROCHE-HOME.md](docs/ROCHE-HOME.md).
+
+## What's on it
+
+**Home screen.** The BabySteps card (top left: awake or asleep and for how
+long, last feed and diaper, amber after 3 hours), the clock, outside and inside
+temperature, and "Up next" (a Vandenberg launch within 4 hours, trash or street
+sweeping the evening before). Banners appear at the top only when something
+needs attention: a power shutoff, a fire within 10 miles, an earthquake, a
+weather alert or bad air. Photos change every 45 seconds and are picked to
+match dawn, day, golden hour or night and clear, cloudy, fog or rain.
+
+**The dock**, left to right: BabySteps, Weather, Library, Home, then the
+streaming apps (YouTube, Netflix, Prime Video, Hulu, Samsung TV Plus, Disney+,
+Paramount+, ESPN, Spotify, Tubi, Pluto TV, Freevee, Google Play Movies, CBS
+News, PBS, PBS KIDS, Universal Guide, Internet) and Monitor last.
+
+| | |
+|---|---|
+| ![Weather page](docs/screenshots/roche-home/weather.jpg) | **Weather.** Now, feels-like, inside temperature and humidity, wind, air quality, UV, rain, sunrise and sunset, pressure, the next 12 hours and 7 days. **Up** shows Ventura and **Down** Malibu: drive time, surf, swell, wind, water temperature and tides. |
+| ![Library](docs/screenshots/roche-home/library.jpg) | **Library.** Public-domain movies, TV, kids' cartoons, LibriVox audiobooks and Gutenberg books. Video and audio stream from the Internet Archive; books can be read aloud. Your place is saved. |
+| ![Home devices](docs/screenshots/roche-home/devices.jpg) | **Home.** Every controllable Home Assistant device by room: scenes, the Chromecast, speakers, the nursery's white noise machine. New HA devices appear by themselves. |
+| ![Logging for BabySteps](docs/screenshots/roche-home/babylog.jpg) | **BabySteps.** Log a feed, pump, diaper, tummy time, bath or sleep from the remote; the TV shows BabySteps' own confirmation. |
+| ![Monitor](docs/screenshots/roche-home/monitor.jpg) | **Monitor.** Health of the TV, the Raspberry Pi (Home Assistant, CPU, temperature, memory, disk, Pi-hole) and the internet connection. The tile shows a green, amber or red dot for each. |
+
+## Using it with the remote
+
+| Where | Keys |
+|---|---|
+| Dock | **◀ ▶** move, **OK** opens. Apps open through Samsung's own launcher, so Netflix and Prime Video start properly on this TV. |
+| Pages (Weather, Monitor, Library, Home, BabySteps) | **Back** closes. |
+| Weather | **▲** Ventura, **▼** Malibu. |
+| BabySteps forms | **▲ ▼** rows, **◀ ▶** values, **OK** next or save, **Back** back. "When" is when it ended. **Sleep → Woke up** logs a finished sleep; end a sleep still running in the BabySteps app. |
+| Home | **OK** toggles or runs a scene; lights, players, volume and thermostats open a control (**◀ ▶** adjust). Locks, covers and the Pi-hole switch need a second **OK**. |
+| Library video | **OK** or Play/Pause pauses, **◀ ▶** −10 s / +30 s, **▲** shows the bar, **▼** next part, **Back** stops and saves the place. |
+| Library audiobook | **OK** pause, **◀ ▶** −15 s / +30 s, **▲ ▼** chapter. |
+| Library book | **▲ ▼** scroll, **◀ ▶** chapter, **OK** auto-scroll, Play/Pause or the red button reads aloud. |
+
+After 3 minutes idle only the photos show; the first press just wakes it.
+
+## Set up
+
+You need the Mac tools from [docs/INSTALL.md](docs/INSTALL.md) steps 2 and 3
+(`~/tizen-studio` and the certificate tool), the `GlassHome` certificate
+profile, and the Raspberry Pi running Home Assistant with the sensors listed
+in [docs/ROCHE-HOME.md](docs/ROCHE-HOME.md).
+
+1. **This home's settings.** `cp .env.example .env` and fill it in: the
+   coordinates, `HA_URL`, `HA_TOKEN` (a long-lived token from HA, profile →
+   Security), the inside temperature and humidity sensors, the PSPS and
+   launch sensors, and the addresses the docs refer to. `.env` is
+   git-ignored; the build turns it into `app/js/env.js` (also git-ignored).
+2. **TV settings.** `cp scripts/tizen-env.example.sh scripts/tizen-env.sh`
+   and set `TV_IP` and `DUID`.
+3. **Photos and library on the Pi** (only when they change): see
+   [tools/sky-photos](tools/sky-photos/README.md) and
+   [tools/library](tools/library/README.md).
+
+## Build and install
+
+1. On the TV: **Apps**, type **1 2 3 4 5**, turn Developer mode **On** with
+   Host PC IP = `DEV_HOST_IP` from `.env` (this Mac), then restart the TV by
+   holding the power button.
+2. On the Mac:
+   ```sh
+   scripts/build.sh      # writes app/js/env.js from .env, signs dist/GlassHome.wgt
+   scripts/install.sh    # installs over the old copy and opens it
+   ```
+3. Turn Developer mode **Off** again and restart the TV.
+
+Every update must be signed with the same certificates
+(`~/tizen-studio-data/keystore/samsung/GlassHome/` and
+`~/.glass-home-secrets/cert-password.env`; back them up). They expire around
+2027-10-21; renew with step 6 of INSTALL.md.
+
+## Preview on the Mac
+
+```sh
+node scripts/make-env-js.js     # after editing .env
+node dev/run.js --no-fetch      # serves the app on 127.0.0.1:18091
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+  --user-data-dir=/tmp/roche-preview --disable-web-security \
+  "http://127.0.0.1:18091/index.html?preview=1&remote=1"
+```
+
+`--disable-web-security` lets the page reach Home Assistant from the Mac (the
+TV doesn't need it). Add `&sheet=weather` (or `ventura`, `malibu`,
+`monitor`), `&library=1`, `&home=1`, `&baby=1` or `&alerts=mock` to open a page
+directly, and `&still=1` to stop the photos moving.
+
+## When something's wrong
+
+- **No internet on the TV:** its only DNS server is Pi-hole on the Pi. If the
+  Pi is down, set the TV's DNS back to **Obtain automatically**.
+- **No BabySteps card, inside temperature, alerts, Library or Home:** Home
+  Assistant isn't answering, or `HA_TOKEN` in `.env` is missing or revoked.
+  Rebuild after fixing `.env`.
+- **Photos are only the 12 built-in ones:** the Pi's photo manifest isn't
+  reachable.
+- **Inspect the running app:** see "Checking it on the TV" in
+  [docs/ROCHE-HOME.md](docs/ROCHE-HOME.md).
+- **Remove it:** see "Removing it" in the same file.
+
+---
+
+# Glass Home (upstream)
+
+The original project's README, unchanged below. Roche Home turns its photo
+website off (`photoService: false`): Tizen 4's Node 4.4.3 can't run it.
 
 A minimal, Apple TV-style home screen for Samsung Tizen TVs, plus a small
 password-protected website, served by the TV itself, for adding photos and
