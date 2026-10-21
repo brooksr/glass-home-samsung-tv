@@ -735,7 +735,8 @@
           credit: [w.title, w.author, w.licence_short || shortLicence(w.licence || w.license)].filter(Boolean).join(' · '),
           user: false,
           time: w.time || null,          // e.g. ['golden', 'night'] (see skyMood)
-          weather: w.weather || null     // e.g. ['clear', 'fog']
+          weather: w.weather || null,    // e.g. ['clear', 'fog']
+          holiday: w.holiday || null     // only shown in its season (see holidayNow)
         };
       }).filter(Boolean);
     }
@@ -784,15 +785,39 @@
     return { time: time, weather: weather };
   }
 
-  // Tagged photos matching both, else the time alone, else every photo.
+  // ---------- holiday photos ----------
+  // The four weeks before Halloween, Thanksgiving (4th Thursday of November)
+  // and Christmas, and Dec 26-31 for New Year. Where two overlap, the nearer
+  // one wins. ?holiday=christmas (or none) overrides it in a preview.
+  function holidayNow(now) {
+    if (Q.holiday) return Q.holiday === 'none' ? null : Q.holiday;
+    var y = now.getFullYear();
+    function day(m, d) { return new Date(y, m, d).getTime(); }
+    var t = day(now.getMonth(), now.getDate());
+    var thanks = 1 + (4 - new Date(y, 10, 1).getDay() + 7) % 7 + 21;   // date in November
+    if (t >= day(9, 31 - 28) && t <= day(9, 31)) return 'halloween';
+    if (t > day(9, 31) && t >= day(10, thanks - 28) && t <= day(10, thanks)) return 'thanksgiving';
+    if (t > day(10, thanks) && t >= day(11, 25 - 28) && t <= day(11, 25)) return 'christmas';
+    if (t >= day(11, 26) && t <= day(11, 31)) return 'newyear';
+    return null;
+  }
+
+  // Tagged photos matching both, else the time alone, else every photo; in a
+  // holiday's season its photos join them (by time of day when 3 or more fit).
+  // Holiday photos never show out of season.
   function matchingPhotos(all) {
-    if (!cfg.photos || cfg.photos.matchSky === false) return all;
-    var m = skyMood(new Date());
+    var now = new Date();
     function has(list, v) { return !!list && list.indexOf(v) >= 0; }
-    var both = all.filter(function (p) { return has(p.time, m.time) && (!m.weather || has(p.weather, m.weather)); });
-    if (both.length >= 3) return both;
-    var byTime = all.filter(function (p) { return has(p.time, m.time); });
-    return byTime.length >= 3 ? byTime : all;
+    var regular = all.filter(function (p) { return !p.holiday; });
+    var h = holidayNow(now);
+    var festive = h ? all.filter(function (p) { return p.holiday === h; }) : [];
+    if (!cfg.photos || cfg.photos.matchSky === false) return regular.concat(festive);
+    var m = skyMood(now);
+    var base = regular.filter(function (p) { return has(p.time, m.time) && (!m.weather || has(p.weather, m.weather)); });
+    if (base.length < 3) base = regular.filter(function (p) { return has(p.time, m.time); });
+    if (base.length < 3) base = regular;
+    var festiveNow = festive.filter(function (p) { return has(p.time, m.time); });
+    return base.concat(festiveNow.length >= 3 ? festiveNow : festive);
   }
 
   // Photos uploaded since the TV last looked are shown next ("fresh"); the

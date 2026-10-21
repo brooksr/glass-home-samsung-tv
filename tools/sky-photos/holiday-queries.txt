@@ -1,0 +1,42 @@
+halloween|jack-o'-lantern
+halloween|jack o lantern night
+halloween|pumpkin patch
+halloween|pumpkins autumn
+halloween|halloween decorations house
+halloween|carved pumpkins
+thanksgiving|autumn harvest pumpkins squash
+thanksgiving|autumn leaves landscape
+thanksgiving|fall foliage
+thanksgiving|cornucopia
+thanksgiving|thanksgiving table
+thanksgiving|wild turkey
+christmas|christmas lights house
+christmas|christmas tree lights
+christmas|christmas ornaments
+christmas|snow cabin winter
+christmas|christmas market
+christmas|gingerbread house
+newyear|fireworks night sky
+newyear|new year fireworks
+newyear|fireworks over city
+newyear|champagne celebration
+halloween|jack-o-lanterns porch
+halloween|pumpkins hay bales
+thanksgiving|autumn forest colors
+thanksgiving|fall colors road
+thanksgiving|hay bales autumn field
+thanksgiving|autumn maple leaves
+thanksgiving|pumpkin pie
+thanksgiving|harvest corn field autumn
+thanksgiving|autumn vineyard
+christmas|National Christmas Tree
+christmas|Rockefeller Center Christmas Tree
+christmas|Christmas decorations
+christmas|Christmas wreath
+christmas|Christmas lights display
+christmas|poinsettia
+christmas|Christmas tree ornament
+christmas|Capitol Christmas tree
+newyear|fireworks
+newyear|New Year's Eve fireworks
+newyear|sparklers

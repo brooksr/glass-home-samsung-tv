@@ -856,5 +856,424 @@
   "weather": [
    "clear"
   ]
+ },
+ {
+  "file": "halloween-01.jpg",
+  "title": "Jack-O-Lantern",
+  "author": "Alabama Extension",
+  "licence": "CC0",
+  "source": "https://commons.wikimedia.org/wiki/File:Jack-O-Lantern_at_night.jpg",
+  "holiday": "halloween",
+  "time": [
+   "golden",
+   "night"
+  ]
+ },
+ {
+  "file": "halloween-02.jpg",
+  "title": "ACES | Bruce Dupree",
+  "author": "Alabama Extension",
+  "licence": "CC0",
+  "source": "https://commons.wikimedia.org/wiki/File:Autumn_Display_at_Garden_Shop.jpg",
+  "holiday": "halloween",
+  "time": [
+   "dawn",
+   "day",
+   "golden"
+  ]
+ },
+ {
+  "file": "halloween-03.jpg",
+  "title": "Gabby Orcutt 2016",
+  "author": "Gabby Orcutt monroefiles",
+  "licence": "CC0",
+  "source": "https://commons.wikimedia.org/wiki/File:Halloween_Pumpkins_(Unsplash).jpg",
+  "holiday": "halloween",
+  "time": [
+   "dawn",
+   "day",
+   "golden"
+  ]
+ },
+ {
+  "file": "halloween-04.jpg",
+  "title": "This image was uploaded as part of Wiki Loves e-textbooks contest in Poland.",
+  "author": "PublicDomainPictures",
+  "licence": "CC0",
+  "source": "https://commons.wikimedia.org/wiki/File:Pumpkins-18094.jpg",
+  "holiday": "halloween",
+  "time": [
+   "dawn",
+   "day",
+   "golden"
+  ]
+ },
+ {
+  "file": "halloween-05.jpg",
+  "title": "Eau Claire, United States",
+  "author": "Beth Teutschmann teutschmann",
+  "licence": "CC0",
+  "source": "https://commons.wikimedia.org/wiki/File:Carved_pumpkin_as_face_(Unsplash).jpg",
+  "holiday": "halloween",
+  "time": [
+   "golden",
+   "night"
+  ]
+ },
+ {
+  "file": "halloween-06.jpg",
+  "title": "ACES | Bruce Dupree",
+  "author": "Alabama Extension",
+  "licence": "CC0",
+  "source": "https://commons.wikimedia.org/wiki/File:Pumpkins,_carved_(48828550093).jpg",
+  "holiday": "halloween",
+  "time": [
+   "day",
+   "golden",
+   "night"
+  ]
+ },
+ {
+  "file": "halloween-07.jpg",
+  "title": "ACES | Bruce Dupree",
+  "author": "Alabama Extension",
+  "licence": "CC0",
+  "source": "https://commons.wikimedia.org/wiki/File:Pumpkins,_carved_(48829086817).jpg",
+  "holiday": "halloween",
+  "time": [
+   "dawn",
+   "day",
+   "golden"
+  ]
+ },
+ {
+  "file": "thanksgiving-01.jpg",
+  "title": "Looking from the hill of The Overlook in Charlton, Massachusetts, of early October fall fo",
+  "author": "Peter Cooper Jr.",
+  "licence": "CC0",
+  "source": "https://commons.wikimedia.org/wiki/File:View_from_The_Overlook_as_sun_starts_to_set_and_leaves_start_to_change_2025-10-06.jpg",
+  "holiday": "thanksgiving",
+  "time": [
+   "dawn",
+   "golden"
+  ]
+ },
+ {
+  "file": "thanksgiving-02.jpg",
+  "title": "Fall Colors looking over Mower Tract, Monongahela National Forest, West Virginia.\nThe Mowe",
+  "author": "Forest Service Photography",
+  "licence": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:Fall_Colors_looking_over_Mower_Tract,_Monongahela_National_Forest,_West_Virginia_(20231005-FS-TEF-006).png",
+  "holiday": "thanksgiving",
+  "time": [
+   "dawn",
+   "day"
+  ]
+ },
+ {
+  "file": "thanksgiving-03.jpg",
+  "title": "Fall colors on Canaan Loop Road (FR 13), Monongahela National Forest, Davis, West Virginia",
+  "author": "usfs_Eastern_Region",
+  "licence": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:Fall_Colors_2019_(20191005-FS-Monongahela-KMB-794).jpg",
+  "holiday": "thanksgiving",
+  "time": [
+   "day",
+   "golden"
+  ]
+ },
+ {
+  "file": "thanksgiving-04.jpg",
+  "title": "Vibrant autumn vegetation and pine-covered slopes frame a curve in the road through Price ",
+  "author": "BLMUtah",
+  "licence": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:Fall_Colors_on_the_Canyon_Road_(55380548484).jpg",
+  "holiday": "thanksgiving",
+  "time": [
+   "day"
+  ]
+ },
+ {
+  "file": "thanksgiving-05.jpg",
+  "title": "#FallColors Update: The leaves on the Allegheny National Forest are showing an average of ",
+  "author": "Chris Warner\nAllegheny National Forest\n\nUnited States Forest Service",
+  "licence": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:Fall_colors_at_Allegheny_National_Forest_03.jpg",
+  "holiday": "thanksgiving",
+  "time": [
+   "day",
+   "golden"
+  ]
+ },
+ {
+  "file": "thanksgiving-06.jpg",
+  "title": "Grassland fog over hay bales at Missisquoi National Wildlife Refuge\n\nPhoto Credit: Ken Stu",
+  "author": "U. S. Fish and Wildlife Service - Northeast Region",
+  "licence": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:Grassland_fog_over_hay_bales_at_Missisquoi_National_Wildlife_Refuge_(9816896463).jpg",
+  "holiday": "thanksgiving",
+  "time": [
+   "dawn",
+   "day"
+  ]
+ },
+ {
+  "file": "thanksgiving-07.jpg",
+  "title": "Pumpkin pie",
+  "author": "Peggy Greb",
+  "licence": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:Pumpkin_Pie.jpg",
+  "holiday": "thanksgiving",
+  "time": [
+   "dawn",
+   "day",
+   "golden",
+   "night"
+  ]
+ },
+ {
+  "file": "thanksgiving-08.jpg",
+  "title": "Nature in Arlington, Massachusetts, USA.",
+  "author": "Daderot",
+  "licence": "CC0",
+  "source": "https://commons.wikimedia.org/wiki/File:Autumn_foliage,_lichens,_and_mosses_-_Arlington,_MA_-_20201127_093925.jpg",
+  "holiday": "thanksgiving",
+  "time": [
+   "day"
+  ]
+ },
+ {
+  "file": "christmas-01.jpg",
+  "title": "The lit National Christmas Tree with the White House in the background",
+  "author": "NPS/ Liz Macro",
+  "licence": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:2020_National_Christmas_Tree_Lighting_(2274716e-44a5-4680-9b53-854791d496b2).jpg",
+  "holiday": "christmas",
+  "time": [
+   "night"
+  ]
+ },
+ {
+  "file": "christmas-02.jpg",
+  "title": "Christmas lights display, Byron Road, New Milton",
+  "author": "Pasicles",
+  "licence": "CC0",
+  "source": "https://commons.wikimedia.org/wiki/File:Christmas_lights_display,_Byron_Road,_New_Milton.jpg",
+  "holiday": "christmas",
+  "time": [
+   "golden",
+   "night"
+  ]
+ },
+ {
+  "file": "christmas-03.jpg",
+  "title": "\"Last night, we led the annual lighting of the Capitol Christmas Tree",
+  "author": "Office of Speaker Mike Johnson",
+  "licence": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:Speaker_Johnson_-_2025_Capitol_Christmas_Tree_Lighting_03.jpg",
+  "holiday": "christmas",
+  "time": [
+   "night"
+  ]
+ },
+ {
+  "file": "christmas-04.jpg",
+  "title": "Beaulieu, United Kingdom",
+  "author": "Annie Spratt anniespratt",
+  "licence": "CC0",
+  "source": "https://commons.wikimedia.org/wiki/File:Christmas_Wreath_(Unsplash).jpg",
+  "holiday": "christmas",
+  "time": [
+   "dawn",
+   "day"
+  ]
+ },
+ {
+  "file": "christmas-05.jpg",
+  "title": "Ryan Graybill 2017-03-19",
+  "author": "Ryan Graybill graybill_",
+  "licence": "CC0",
+  "source": "https://commons.wikimedia.org/wiki/File:Classic_winter_cabin_(Unsplash).jpg",
+  "holiday": "christmas",
+  "time": [
+   "dawn",
+   "golden",
+   "night"
+  ]
+ },
+ {
+  "file": "christmas-06.jpg",
+  "title": "Dolly Varden public use cabin is one of several cabins on Kenai National Wildlife Refuge a",
+  "author": "USFWSAlaska",
+  "licence": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:Dolly_Varden_Public_Use_Cabin_in_the_snow_(51011193270).jpg",
+  "holiday": "christmas",
+  "time": [
+   "day"
+  ]
+ },
+ {
+  "file": "christmas-07.jpg",
+  "title": "Dolly Varden public use cabin is one of several cabins on Kenai National Wildlife Refuge a",
+  "author": "USFWSAlaska",
+  "licence": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:Dolly_Varden_Public_Use_Cabin_in_the_snow_(51079687538).jpg",
+  "holiday": "christmas",
+  "time": [
+   "day"
+  ]
+ },
+ {
+  "file": "christmas-08.jpg",
+  "title": "Big Bear Lake, United States",
+  "author": "YUNXI SHI yunxishi",
+  "licence": "CC0",
+  "source": "https://commons.wikimedia.org/wiki/File:Winter_cabin_in_California_(Unsplash_LPS_zk5MsqA).jpg",
+  "holiday": "christmas",
+  "time": [
+   "dawn",
+   "day"
+  ]
+ },
+ {
+  "file": "christmas-09.jpg",
+  "title": "The Engineer Lake public use cabin is one of several cabins available for reservation on K",
+  "author": "USFWSAlaska",
+  "licence": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:Engineer_Lake_public_use_cabin_in_the_snow_(51011286705).jpg",
+  "holiday": "christmas",
+  "time": [
+   "day"
+  ]
+ },
+ {
+  "file": "christmas-10.jpg",
+  "title": "A gingerbread house display that was built during the Gingerbread House Challenge at the U",
+  "author": "U.S. Army photo by Sgt. John Todd",
+  "licence": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:Gingerbread_house_contest_at_Rose_Barracks_(6465107).jpg",
+  "holiday": "christmas",
+  "time": [
+   "day",
+   "golden",
+   "night"
+  ]
+ },
+ {
+  "file": "newyear-01.jpg",
+  "title": "Colourful bursts of Guy Fawkes fireworks display over Wellington harbour and city",
+  "author": "Pseudopanax at English Wikipedia",
+  "licence": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:Colourful_fireworks_display_over_Wellington_harbour_and_city.jpg",
+  "holiday": "newyear",
+  "time": [
+   "golden",
+   "night"
+  ]
+ },
+ {
+  "file": "newyear-02.jpg",
+  "title": "A firework bursting white over the towers of the city at night",
+  "author": "Wilfredor",
+  "licence": "CC0",
+  "source": "https://commons.wikimedia.org/wiki/File:Fireworks_over_the_city,_Quebec_City.jpg",
+  "holiday": "newyear",
+  "time": [
+   "night"
+  ]
+ },
+ {
+  "file": "newyear-03.jpg",
+  "title": "Gold and blue bursts opening together over the roofs of the city",
+  "author": "Wilfredor",
+  "licence": "CC0",
+  "source": "https://commons.wikimedia.org/wiki/File:Fireworks_over_the_city_03,_Quebec_City.jpg",
+  "holiday": "newyear",
+  "time": [
+   "night"
+  ]
+ },
+ {
+  "file": "newyear-04.jpg",
+  "title": "Colourful fireworks display over Wellington City viewed from Kelburn hill",
+  "author": "Pseudopanax at English Wikipedia",
+  "licence": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:Multiple_kinds_of_colourful_fireworks_over_Wellington_City.jpg",
+  "holiday": "newyear",
+  "time": [
+   "night"
+  ]
+ },
+ {
+  "file": "newyear-05.jpg",
+  "title": "Fireworks display at night",
+  "author": "IIP Photo Archive",
+  "licence": "CC0",
+  "source": "https://commons.wikimedia.org/wiki/File:Fireworks_display_at_night.jpg",
+  "holiday": "newyear",
+  "time": [
+   "night"
+  ]
+ },
+ {
+  "file": "newyear-06.jpg",
+  "title": "Korean New Year",
+  "author": "<a href=\"https://pixabay.com/ko/?utm_source=link-attribution&utm_medium=referral",
+  "licence": "CC0",
+  "source": "https://commons.wikimedia.org/wiki/File:Fireworks_of_Korean_New_year%27s_day_eve.jpg",
+  "holiday": "newyear",
+  "time": [
+   "night"
+  ]
+ },
+ {
+  "file": "newyear-07.jpg",
+  "title": "Champagnergl\u00e4ser und Wunderkerze",
+  "author": "unbekannt",
+  "licence": "CC0",
+  "source": "https://commons.wikimedia.org/wiki/File:Light-flower-sparkler-celebration-cup-drink.jpg",
+  "holiday": "newyear",
+  "time": [
+   "dawn",
+   "day",
+   "golden",
+   "night"
+  ]
+ },
+ {
+  "file": "newyear-08.jpg",
+  "title": "Veenendaal, Netherlands",
+  "author": "Nienke van Tellingen iamnienke",
+  "licence": "CC0",
+  "source": "https://commons.wikimedia.org/wiki/File:Beautiful_sparkler_on_New_Years_Eve!_(Unsplash).jpg",
+  "holiday": "newyear",
+  "time": [
+   "golden",
+   "night"
+  ]
+ },
+ {
+  "file": "newyear-09.jpg",
+  "title": "Jenu Prasad 2017-05-16",
+  "author": "Jenu Prasad jenuprasad",
+  "licence": "CC0",
+  "source": "https://commons.wikimedia.org/wiki/File:Detail_of_burning_sparkler.jpg",
+  "holiday": "newyear",
+  "time": [
+   "golden",
+   "night"
+  ]
+ },
+ {
+  "file": "newyear-10.jpg",
+  "title": "Joshua Fuller 2017-03-27",
+  "author": "Joshua Fuller joshuafuller",
+  "licence": "CC0",
+  "source": "https://commons.wikimedia.org/wiki/File:Sparklers_2017_(Unsplash).jpg",
+  "holiday": "newyear",
+  "time": [
+   "golden",
+   "night"
+  ]
  }
 ]

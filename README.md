@@ -23,7 +23,9 @@ temperature, and "Up next" (a Vandenberg launch within 4 hours, trash or street
 sweeping the evening before). Banners appear at the top only when something
 needs attention: a power shutoff, a fire within 10 miles, an earthquake, a
 weather alert or bad air. Photos change every 45 seconds and are picked to
-match dawn, day, golden hour or night and clear, cloudy, fog or rain.
+match dawn, day, golden hour or night and clear, cloudy, fog or rain. In the
+four weeks before Halloween, Thanksgiving and Christmas, and from Dec 26 to
+31 for New Year, that holiday's photos join them.
 
 **The dock**, left to right: BabySteps, Weather, Library, Home, then the
 streaming apps (YouTube, Netflix, Prime Video, Hulu, Samsung TV Plus, Disney+,

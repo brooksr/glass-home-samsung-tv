@@ -25,3 +25,19 @@ folder):
 
 To add your own: put a 1920x1080 JPEG in that folder and add an entry with
 `file`, `time` and `weather` to its `manifest.json`. No reinstall needed.
+
+## Holiday photos
+
+35 more (7 Halloween, 8 Thanksgiving, 10 Christmas, 10 New Year), public
+domain / CC0 from Commons, named `<holiday>-NN.jpg`. Their manifest entries
+have `holiday` (`halloween`, `thanksgiving`, `christmas` or `newyear`) and
+`time`, and no `weather`. The app shows them only in their season (the four
+weeks before each holiday, and Dec 26-31 for New Year; see `holidayNow` in
+`app/js/home.js`), alongside the sky-matched photos.
+
+Made the same way: `search.py < holiday-queries.txt`, contact sheets by eye
+(no people in focus, no paintings), then
+`fetch-holiday.py candidates.json holiday-picks.txt raw/` (picks are
+candidate indexes from the two search runs, merged) and `resize.py`. The
+Pi's manifest from before them is kept as `manifest.before-holidays.json`
+next to it.
