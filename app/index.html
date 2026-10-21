@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=1920, height=1080, user-scalable=no">
-<title>Glass Home</title>
+<title>Roche Home</title>
 <link rel="stylesheet" href="css/tv.css">
 </head>
 <body>
@@ -19,7 +19,7 @@
 
   <div id="brand" aria-hidden="true">
     <img id="brand-glyph" src="img/brand-glyph.svg" alt="">
-    <div id="brand-name">Glass Home</div>
+    <div id="brand-name">Roche Home</div>
   </div>
 
   <div id="clock" aria-hidden="true">
@@ -28,16 +28,20 @@
     <div id="weather">
       <div id="wx-now">
         <span class="wx-icon" id="wx-now-icon"></span>
-        <span id="wx-now-temp"></span>
-        <span id="wx-now-text"></span>
+        <span class="wx-temp"><span id="wx-now-temp"></span><span class="wx-where">Outside</span></span>
+        <span class="wx-temp" id="wx-inside"><span id="wx-inside-temp"></span><span class="wx-where">Inside</span></span>
       </div>
+      <div id="wx-now-text"></div>
       <div id="wx-week">
         <div id="wx-days"></div>
         <div id="wx-foot"><span id="wx-place"></span><span>Weather: Open-Meteo</span></div>
       </div>
     </div>
+    <div id="upnext"></div>
   </div>
   <div id="credit"></div>
+  <div id="banners" aria-live="polite"></div>
+  <div id="ha" aria-hidden="true"></div>
 
   <div id="dock">
     <div id="dock-viewport"><div id="dock-row"></div></div>
@@ -72,12 +76,23 @@
     <div class="panel-diag" id="panel-diag"></div>
   </div>
 
+  <div id="baby" role="dialog" aria-label="Log for BabySteps"></div>
+  <div id="sheet" role="dialog" aria-label="Weather and monitor"></div>
+  <div id="library" role="dialog" aria-label="Library"></div>
+  <div id="devices" role="dialog" aria-label="Home devices"></div>
   <div id="toast"></div>
 </div>
 <script src="js/local-key.js"></script>
+<script src="js/env.js"></script>
 <script src="js/config.js"></script>
 <script src="js/weather.js"></script>
+<script src="js/homeassistant.js"></script>
 <script src="js/ambient.js"></script>
+<script src="js/alerts.js"></script>
+<script src="js/babylog.js"></script>
+<script src="js/panels.js"></script>
+<script src="js/library.js"></script>
+<script src="js/devices.js"></script>
 <script src="js/ytparse.js"></script>
 <script src="js/platform.js"></script>
 <script src="js/data.js"></script>

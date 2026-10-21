@@ -21,7 +21,7 @@
   if (!cfg || !root) return;
   if (!mockWx && (cfg.enabled === false || (!cfg.latitude && !cfg.longitude))) return;
 
-  var KEY = 'gh.weather.v1';
+  var KEY = 'gh.weather.v2';
   var HIDE_AFTER = 12 * 3600 * 1000;    // older than this: hide rather than mislead
   var NOW_STALE = 3 * 3600 * 1000;      // older than this: drop the "now" temperature
   var REFRESH = cfg.refreshMs || 30 * 60 * 1000;
@@ -148,6 +148,10 @@
     return '<svg viewBox="0 0 64 64" width="100%" height="100%" aria-hidden="true" focusable="false">' + b + '</svg>';
   }
 
+  // Shared with js/panels.js (the Weather tile and page).
+  GH.wxIcon = iconSvg;
+  GH.wxInfo = info;
+
   // ---------- data ----------
   function readCache() {
     try { return JSON.parse(window.localStorage.getItem(KEY) || 'null'); } catch (e) { return null; }
@@ -167,6 +171,13 @@
       if (!/^\d{4}-\d{2}-\d{2}$/.test(String(d.time[i]))) return false;
     }
     return num(j.current.temperature_2m);
+  }
+
+  // "2026-10-21T07:05" (no offset) as the TV's local time. Tizen 4's engine
+  // would read it as UTC.
+  function localTime(s) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(String(s || ''));
+    return m ? new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]).getTime() : null;
   }
 
   function localDay(dt) {
@@ -204,6 +215,14 @@
     var nowCode = num(c.weather_code) ? c.weather_code : d.weather_code[i0];
     var nowInfo = info(nowCode);
     var showNow = age <= NOW_STALE;
+
+    // Shared with home.js, which picks photos to match the sky.
+    var sky = { code: showNow ? nowCode : d.weather_code[i0], isDay: !night,
+      sunrise: d.sunrise ? localTime(d.sunrise[i0]) : null, sunset: d.sunset ? localTime(d.sunset[i0]) : null };
+    if (!GH.sky || GH.sky.code !== sky.code || GH.sky.isDay !== sky.isDay || GH.sky.sunset !== sky.sunset) {
+      GH.sky = sky;
+      try { document.dispatchEvent(new CustomEvent('gh-sky')); } catch (e) { /* home.js also re-checks on a timer */ }
+    }
     document.getElementById('wx-now-icon').innerHTML = iconSvg(showNow ? nowInfo[2] : info(d.weather_code[i0])[2], showNow && night);
     document.getElementById('wx-now-temp').textContent = showNow ? deg(c.temperature_2m) : '';
     var parts = [];
@@ -238,7 +257,8 @@
     return 'https://api.open-meteo.com/v1/forecast?latitude=' + encodeURIComponent(cfg.latitude) +
       '&longitude=' + encodeURIComponent(cfg.longitude) +
       '&current=temperature_2m,weather_code,is_day' +
-      '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max' +
+      '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset' +
+      '&temperature_unit=' + encodeURIComponent(cfg.temperatureUnit || 'celsius') +
       '&timezone=' + encodeURIComponent(cfg.timezone || 'auto') + '&forecast_days=8';
   }
 

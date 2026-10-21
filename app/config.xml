@@ -9,14 +9,12 @@
 <widget xmlns="http://www.w3.org/ns/widgets" xmlns:tizen="http://tizen.org/ns/widgets"
         id="http://glass-home.local/app" version="1.0.0" viewmodes="maximized">
     <tizen:application id="GlassHome1.GlassHome" package="GlassHome1" required_version="3.0"/>
-    <name>Glass Home</name>
+    <name>Roche Home</name>
     <description>Home screen with rotating photos, a dock of apps and shortcuts, and a password-protected website for adding photos.</description>
     <content src="index.html"/>
     <icon src="icon.png"/>
 
     <feature name="http://tizen.org/feature/screen.size.all"/>
-    <!-- W3C <feature>, not <tizen:feature>; only a store filter. -->
-    <feature name="http://tizen.org/feature/web.service"/>
 
     <!-- WARP: the app reaches its own service on 127.0.0.1, YouTube thumbnails
          (i.ytimg.com) and, if weather is on, api.open-meteo.com; no CSP or allow-navigation, so
@@ -31,12 +29,6 @@
     <tizen:profile name="tv-samsung"/>
     <tizen:metadata key="http://samsung.com/tv/metadata/multitasking.support" value="true"/>
 
-    <!-- The LAN website for photos and shortcuts (Node API, started by the app). -->
-    <tizen:service id="GlassHome1.Photos">
-        <tizen:content src="service/index.js"/>
-        <tizen:name>Photos</tizen:name>
-        <tizen:description>Glass Home photo and shortcut website on port 8090</tizen:description>
-    </tizen:service>
 
     <tizen:setting screen-orientation="landscape" context-menu="disable" background-support="disable"
                    encryption="disable" install-location="auto" hwkey-event="enable"/>

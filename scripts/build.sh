@@ -9,6 +9,8 @@ command -v tizen >/dev/null || { echo "The Tizen CLI is not on PATH; see docs/IN
 
 # The key the app and its service share is made per checkout, never committed.
 [ -f "$root/app/js/local-key.js" ] || sh "$root/dev/new-local-key.sh"
+# This home's settings, from .env (see .env.example); both git-ignored.
+node "$root/scripts/make-env-js.js"
 
 rm -rf "$root/app/.buildResult"
 tizen build-web -e ".*" -e "*.md" -- "$root/app"

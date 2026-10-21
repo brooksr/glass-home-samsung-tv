@@ -1,0 +1,29 @@
+local|"Santa Monica Mountains" landscape
+local|"Point Mugu" 
+local|"Thousand Oaks" hills
+local|"Malibu" coast sunset
+local|"Channel Islands National Park"
+local|"Conejo" landscape
+golden|California sunset coast
+golden|"Big Sur" sunset
+golden|Yosemite sunset
+dawn|California sunrise
+dawn|Yosemite sunrise
+night|"Joshua Tree" night sky
+night|"Death Valley" night stars
+night|Yosemite night stars
+night|"Milky Way" California
+fog|California fog coast
+fog|"Golden Gate" fog
+fog|redwood fog
+fog|"Big Sur" fog
+rain|California storm clouds
+rain|Yosemite storm clouds
+rain|rain California landscape
+cloudy|"Lake Tahoe" clouds
+cloudy|"Big Sur" coast
+day|Yosemite valley
+day|"Joshua Tree National Park" landscape
+day|"Point Reyes"
+day|"Lake Tahoe"
+day|"Death Valley" landscape

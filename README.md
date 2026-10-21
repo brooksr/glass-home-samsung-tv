@@ -1,5 +1,9 @@
 # Glass Home
 
+> **This checkout is Roche Home**, adapted for a 2018 Samsung UN55NU6900:
+> what changed, how to rebuild, and how to revert are in
+> [docs/ROCHE-HOME.md](docs/ROCHE-HOME.md).
+
 A minimal, Apple TV-style home screen for Samsung Tizen TVs, plus a small
 password-protected website, served by the TV itself, for adding photos and
 shortcuts from your phone.

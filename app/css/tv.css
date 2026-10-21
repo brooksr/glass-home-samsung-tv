@@ -47,7 +47,10 @@ html, body {
 /* ---------- background photos ---------- */
 #bg, .bg-layer {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
 }
 #bg { z-index: 0; }   /* own stacking context: the layers' z-index stays inside */
 .bg-layer {
@@ -60,7 +63,10 @@ html, body {
 .bg-layer.instant { transition: none; }
 .bg-layer img {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -134,9 +140,9 @@ html, body {
   left: 78px;
   display: flex;
   align-items: center;
-  gap: 18px;
   text-shadow: 0 2px 22px rgba(0, 0, 0, 0.35);
 }
+#brand > * + * { margin-left: 18px; }  /* no flex gap before Chrome 84 (2018 TVs) */
 #brand-glyph {
   display: block;
   width: 80px;
@@ -163,24 +169,33 @@ html, body {
 #wx-now {
   display: flex;
   align-items: center;
-  gap: 12px;
   font-size: 28px;
   font-weight: 500;
   line-height: 1;
 }
+#wx-now > * + * { margin-left: 12px; }  /* no flex gap before Chrome 84 (2018 TVs) */
 #wx-now-icon {
   display: block;
   width: 52px;
   height: 52px;
 }
-#wx-now-temp {
+.wx-temp { display: flex; align-items: baseline; }
+#wx-now .wx-temp + .wx-temp { margin-left: 26px; }
+.wx-where {
+  margin-left: 8px;
+  font-size: 22px;
+  color: var(--text-2);
+}
+#wx-inside:not(.on) { display: none; }
+#wx-now-temp, #wx-inside-temp {
   font-size: 46px;
   font-weight: 600;
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
 }
 #wx-now-text {
-  margin-left: 4px;
+  margin-top: 12px;
+  font-size: 26px;
   color: var(--text-2);
   white-space: pre;
 }
@@ -244,7 +259,10 @@ html, body {
 /* ---------- evening dimming ---------- */
 #night-shade {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   background: rgba(0, 0, 0, 0.38);
   opacity: 0;
   transition: opacity 3s ease;
@@ -255,6 +273,7 @@ html.night #night-shade { opacity: 1; }
 /* ---------- screensaver: only the photos ---------- */
 #brand, #clock, #shade-top, #shade-left, #shade-bottom { transition: opacity 0.3s ease; }
 html.ambient #brand,
+html.ambient #ha,
 html.ambient #clock,
 html.ambient #dock,
 html.ambient #label,
@@ -309,7 +328,10 @@ html.lite #wx-week {
   /* gentle top highlight, like light on the edge of glass */
   content: "";
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   border-radius: inherit;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0) 40%);
   pointer-events: none;
@@ -337,10 +359,10 @@ html.lite #wx-week {
   left: 16px;
   top: var(--dock-pad-y);
   display: flex;
-  gap: var(--gap);
   transition: transform 0.38s var(--ease), opacity 0.25s ease;
   will-change: transform;
 }
+#dock-row > * + * { margin-left: var(--gap); }  /* no flex gap before Chrome 84 (2018 TVs) */
 #dock.dimmed #dock-row { opacity: 0.55; }
 #dock { transition: opacity 0.3s ease; }
 #dock.away { opacity: 0; }
@@ -356,7 +378,10 @@ html.lite #wx-week {
 }
 .tile .glow {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   border-radius: inherit;
   box-shadow: 0 26px 48px rgba(0, 0, 0, 0.58), 0 0 0 1.5px rgba(255, 255, 255, 0.45), 0 0 50px rgba(255, 255, 255, 0.24);
   opacity: 0;
@@ -364,7 +389,10 @@ html.lite #wx-week {
 }
 .tile .face {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   border-radius: inherit;
   overflow: hidden;
   background: rgba(255, 255, 255, 0.10);
@@ -526,7 +554,10 @@ html.lite #wx-week {
 /* ---------- + panel ---------- */
 #scrim {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   background: rgba(0, 0, 0, 0.40);
   opacity: 0;
   transition: opacity 0.3s ease;
@@ -691,5 +722,399 @@ html.lite #wx-week {
 
 /* ---------- states ---------- */
 html.paused *, html.paused *::before, html.paused *::after { animation-play-state: paused !important; }
+/* In the background or opening an app: no layers at all, so the app gets the
+   graphics memory (a 2018 TV runs out with Netflix or Prime Video). */
+html.paused #stage, html.launching #stage { display: none; }
 html.still *, html.still *::before, html.still *::after { transition: none !important; animation: none !important; }
 html.lite .bg-layer img { will-change: auto; }
+
+/* ---------- this TV: no brand name or photo credit ---------- */
+#brand, #credit { display: none; }
+
+/* ---------- weather: only the icon and the outside and inside temperatures ---------- */
+#wx-week, #wx-now-text { display: none; }
+
+/* ---------- BabySteps card (js/homeassistant.js) ---------- */
+#ha {
+  position: absolute;
+  top: 60px;
+  left: 78px;
+  min-width: 460px;
+  padding: 28px 34px 30px;
+  border-radius: 30px;
+  background: rgba(16, 18, 22, 0.58);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.10), 0 20px 60px rgba(0, 0, 0, 0.25);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.30);
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+#ha.on { opacity: 1; }
+html.ambient #ha.on { opacity: 0; }
+.ha-head {
+  display: flex;
+  align-items: center;
+}
+.ha-name {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.60);
+}
+.ha-alert {
+  margin-left: 16px;
+  padding: 5px 14px;
+  border-radius: 12px;
+  background: #e5484d;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.ha-status {
+  margin-top: 12px;
+  font-size: 50px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.ha-status.asleep { color: #b4c6ff; }
+.ha-since {
+  margin-top: 8px;
+  font-size: 22px;
+  color: rgba(255, 255, 255, 0.55);
+}
+.ha-stats {
+  display: flex;
+  margin-top: 24px;
+  padding-top: 22px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+.ha-stat { min-width: 190px; }
+.ha-stat + .ha-stat {
+  margin-left: 34px;
+  padding-left: 34px;
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
+}
+.ha-label {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.50);
+}
+.ha-value {
+  margin-top: 8px;
+  font-size: 34px;
+  font-weight: 600;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+.ha-stat.due .ha-value { color: #ffb224; }
+.ha-detail {
+  margin-top: 6px;
+  font-size: 21px;
+  color: rgba(255, 255, 255, 0.60);
+  white-space: nowrap;
+}
+.ha-foot {
+  margin-top: 18px;
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+/* ---------- alert banners (js/alerts.js), top, between the BabySteps card and the clock ---------- */
+#banners {
+  position: absolute;
+  top: 60px;
+  left: 650px;                              /* right of the BabySteps card, left of the clock */
+  width: 720px;
+  display: none;
+}
+#banners.on { display: block; }
+html.ambient #banners { opacity: 1; }      /* alerts stay up during the screensaver */
+.banner {
+  display: flex;
+  align-items: center;
+  padding: 18px 26px;
+  border-radius: 24px;
+  background: rgba(16, 18, 22, 0.72);
+  box-shadow: inset 0 0 0 2px rgba(255, 178, 36, 0.75), 0 16px 40px rgba(0, 0, 0, 0.30);
+  font-size: 26px;
+  line-height: 1.2;
+}
+.banner + .banner { margin-top: 12px; }
+.banner.red { background: rgba(70, 12, 14, 0.80); box-shadow: inset 0 0 0 2px rgba(229, 72, 77, 0.95), 0 16px 40px rgba(0, 0, 0, 0.30); }
+.banner-dot {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-right: 16px;
+  border-radius: 50%;
+  background: #ffb224;
+}
+.banner.red .banner-dot { background: #e5484d; }
+.banner-title { font-weight: 700; margin-right: 14px; white-space: nowrap; }
+.banner-detail { color: rgba(255, 255, 255, 0.72); font-size: 23px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---------- up next (js/alerts.js), under the weather ---------- */
+#upnext {
+  display: none;
+  margin-top: 22px;
+  text-align: right;
+}
+#upnext.on { display: block; }
+.next-item + .next-item { margin-top: 14px; }
+.next-title { font-size: 26px; font-weight: 600; }
+.next-detail { margin-top: 4px; font-size: 21px; color: var(--text-2); }
+
+/* ---------- BabySteps logger (js/babylog.js) ---------- */
+.tile-baby .face { background: #fefcf8; }
+#baby {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+}
+#baby.open { display: flex; }
+.baby-card {
+  width: 1040px;
+  padding: 46px 54px 40px;
+  border-radius: 40px;
+  background: rgba(22, 24, 30, 0.94);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.10), 0 40px 120px rgba(0, 0, 0, 0.5);
+}
+.baby-title { font-size: 44px; font-weight: 600; margin-bottom: 30px; }
+.baby-grid { display: flex; flex-wrap: wrap; margin: 0 -10px; }
+.baby-grid .baby-btn { width: calc(33.333% - 20px); margin: 10px; padding: 44px 0; font-size: 36px; text-align: center; }
+.baby-btn {
+  border-radius: 26px;
+  background: rgba(255, 255, 255, 0.10);
+  font-weight: 600;
+  transition: transform 0.18s var(--ease);
+}
+.baby-btn.focused { background: rgba(255, 255, 255, 0.95); color: #0c0c0e; transform: scale(1.05); }
+.baby-hint { margin-top: 26px; font-size: 21px; color: rgba(255, 255, 255, 0.45); }
+.baby-row {
+  display: flex;
+  align-items: center;
+  margin: 0 -18px 10px;
+  padding: 14px 18px;
+  border-radius: 22px;
+}
+.baby-row.focused { background: rgba(255, 255, 255, 0.10); }
+.baby-label { width: 170px; flex: none; font-size: 24px; color: rgba(255, 255, 255, 0.6); }
+.baby-chips { display: flex; flex-wrap: wrap; }
+.baby-chip {
+  margin: 4px 12px 4px 0;
+  padding: 12px 22px;
+  border-radius: 18px;
+  font-size: 26px;
+  color: rgba(255, 255, 255, 0.55);
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.14);
+}
+.baby-chip.on { color: #fff; background: #3a7bd5; box-shadow: none; font-weight: 600; }
+.baby-row.focused .baby-chip.on { background: #fff; color: #0c0c0e; }
+.baby-note { margin: 6px 0 4px; font-size: 21px; color: #ffb224; }
+.baby-buttons { display: flex; margin-top: 26px; }
+.baby-btn.small { padding: 18px 40px; font-size: 28px; }
+.baby-btn.small + .baby-btn.small { margin-left: 20px; }
+.baby-status { margin-top: 22px; font-size: 25px; }
+.baby-status.ok { color: #6fd08c; }
+.baby-status.err { color: #ff8a8d; }
+
+/* ---------- Weather and Monitor tiles and pages (js/panels.js) ---------- */
+.tile-weather .face, .tile-monitor .face {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(30, 60, 90, 0.55);
+}
+.tile-monitor .face { background: rgba(28, 32, 38, 0.70); align-items: flex-start; padding-left: 26%; }
+.tile-wx-icon { width: 46%; height: 46%; }
+.tile-wx-temp { margin-top: 2px; font-size: 34px; font-weight: 600; }
+.tile-mon-row { display: flex; align-items: center; font-size: 22px; font-weight: 600; line-height: 1.5; }
+.tile-mon-row .dot { margin-right: 10px; }
+.dot { display: inline-block; flex: none; width: 18px; height: 18px; border-radius: 50%; background: rgba(255, 255, 255, 0.3); }
+.dot.small { width: 13px; height: 13px; }
+.dot.ok { background: #46c46f; }
+.dot.warn { background: #ffb224; }
+.dot.bad { background: #e5484d; }
+.dot.none { background: transparent; }
+
+#sheet {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+}
+#sheet.open { display: flex; }
+.sh-card {
+  position: relative;
+  width: 1720px;
+  height: 960px;
+  box-sizing: border-box;
+  padding: 50px 64px 40px;
+  border-radius: 44px;
+  background: rgba(18, 22, 30, 0.97);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.10), 0 40px 120px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+.sh-head { display: flex; align-items: baseline; justify-content: space-between; }
+.sh-title { font-size: 46px; font-weight: 600; }
+.sh-nav { font-size: 24px; color: rgba(255, 255, 255, 0.5); white-space: pre; }
+.sh-empty { margin-top: 60px; font-size: 30px; color: rgba(255, 255, 255, 0.6); }
+.sh-drive { margin-top: 10px; font-size: 28px; color: #9fd0ff; }
+.sh-top { display: flex; align-items: flex-start; margin-top: 30px; }
+.sh-icon { width: 64px; height: 64px; margin: 6px auto; }
+.sh-icon.big { width: 170px; height: 170px; margin: 0 30px 0 0; flex: none; }
+.sh-now { width: 470px; flex: none; }
+.sh-temp { font-size: 120px; font-weight: 600; line-height: 1; letter-spacing: -0.03em; }
+.sh-cond { margin-top: 10px; font-size: 36px; font-weight: 500; }
+.sh-sub { margin-top: 10px; font-size: 25px; color: rgba(255, 255, 255, 0.6); }
+.sh-grid { display: flex; flex-wrap: wrap; flex: 1; margin-left: 20px; }
+.sh-detail { width: 25%; box-sizing: border-box; padding: 4px 18px 22px 0; }
+.sh-dname { font-size: 19px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255, 255, 255, 0.45); min-height: 23px; }
+.sh-dval { margin-top: 6px; font-size: 34px; font-weight: 600; }
+.sh-dsub { margin-top: 4px; font-size: 20px; color: rgba(255, 255, 255, 0.55); }
+.sh-label { margin-top: 26px; font-size: 19px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255, 255, 255, 0.45); }
+.sh-row { display: flex; margin-top: 12px; padding: 14px 0; border-radius: 26px; background: rgba(255, 255, 255, 0.05); }
+.sh-cell { flex: 1; text-align: center; }
+.sh-ct { font-size: 22px; color: rgba(255, 255, 255, 0.65); }
+.sh-cv { font-size: 28px; font-weight: 600; }
+.sh-cv.big { margin: 14px 0 6px; font-size: 34px; }
+.sh-cr { min-height: 24px; font-size: 20px; color: #68c4ff; }
+.sh-foot { position: absolute; left: 64px; bottom: 30px; font-size: 19px; color: rgba(255, 255, 255, 0.4); }
+.sh-dots { position: absolute; right: 30px; top: 50%; margin-top: -40px; }
+.sh-dots span { display: block; width: 12px; height: 12px; margin: 10px 0; border-radius: 50%; background: rgba(255, 255, 255, 0.25); }
+.sh-dots span.on { background: #fff; }
+.mon-cols { display: flex; margin-top: 40px; }
+.mon-col { flex: 1; padding: 30px 28px; border-radius: 30px; background: rgba(255, 255, 255, 0.05); }
+.mon-col + .mon-col { margin-left: 26px; }
+.mon-head { display: flex; align-items: center; margin-bottom: 22px; font-size: 34px; font-weight: 600; }
+.mon-head .dot { margin-right: 16px; }
+.mon-row { display: flex; align-items: baseline; padding: 11px 0; border-top: 1px solid rgba(255, 255, 255, 0.07); font-size: 23px; }
+.mon-row .dot { margin-right: 14px; position: relative; top: 1px; }
+.mon-name { width: 165px; flex: none; color: rgba(255, 255, 255, 0.6); }
+.mon-val { font-weight: 600; }
+
+/* ---------- Library (js/library.js) ---------- */
+#library {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: none;
+  background: #0d0f14;
+  overflow: hidden;
+}
+#library.open { display: block; }
+/* Video: nothing else drawn behind it. */
+html.lib-playing #bg, html.lib-playing #dock, html.lib-playing #ha, html.lib-playing #clock,
+html.lib-playing #banners, html.lib-playing #night-shade { display: none; }
+.lib-loading { padding: 140px; font-size: 34px; color: rgba(255, 255, 255, 0.7); }
+
+.lib-browse { position: absolute; top: 0; right: 0; bottom: 0; left: 0; padding: 60px 0 0 90px; }
+.lib-title { font-size: 52px; font-weight: 600; }
+.lib-rows { position: absolute; top: 150px; left: 90px; right: 0; transition: transform 0.3s var(--ease); }
+.lib-row { height: 360px; }
+.lib-rowlabel { font-size: 26px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255, 255, 255, 0.5); }
+.lib-row.focused .lib-rowlabel { color: #fff; }
+.lib-strip { display: flex; margin-top: 14px; transition: transform 0.25s var(--ease); }
+.lib-card { flex: none; width: 300px; margin-right: 30px; transition: transform 0.2s var(--ease); }
+.lib-art { position: relative; width: 300px; height: 200px; border-radius: 18px; overflow: hidden; background: rgba(255, 255, 255, 0.08); }
+.lib-art img { width: 100%; height: 100%; object-fit: cover; }
+.lib-card.books .lib-art img, .lib-card.audiobooks .lib-art img { object-fit: contain; background: #1a1d24; }
+.lib-card.focused { transform: scale(1.08); }
+.lib-card.focused .lib-art { box-shadow: 0 0 0 5px #fff; }
+.lib-name { margin-top: 12px; font-size: 22px; color: rgba(255, 255, 255, 0.75); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lib-card.focused .lib-name { color: #fff; font-weight: 600; }
+.lib-progress { position: absolute; left: 12px; right: 12px; bottom: 10px; height: 6px; border-radius: 3px; background: rgba(0, 0, 0, 0.5); }
+.lib-fill { height: 100%; border-radius: 3px; background: #e5484d; }
+.lib-info { position: absolute; right: 90px; top: 64px; text-align: right; }
+.lib-info-title { font-size: 32px; font-weight: 600; }
+.lib-info-sub { margin-top: 6px; font-size: 22px; color: rgba(255, 255, 255, 0.6); }
+
+.lib-detail { display: flex; padding: 90px 100px; }
+.lib-detail-art { flex: none; width: 560px; height: 380px; border-radius: 24px; overflow: hidden; background: #1a1d24; }
+.lib-detail-art img { width: 100%; height: 100%; object-fit: cover; }
+.lib-detail-art.books img, .lib-detail-art.audiobooks img { object-fit: contain; }
+.lib-detail-side { flex: 1; margin-left: 70px; }
+.lib-detail-title { font-size: 54px; font-weight: 600; line-height: 1.1; }
+.lib-detail-sub { margin-top: 12px; font-size: 24px; color: rgba(255, 255, 255, 0.55); }
+.lib-detail-desc { margin-top: 20px; max-height: 140px; overflow: hidden; font-size: 24px; line-height: 1.45; color: rgba(255, 255, 255, 0.75); }
+.lib-list { margin-top: 30px; }
+.lib-item { display: flex; align-items: baseline; padding: 16px 24px; margin: 0 -24px; border-radius: 18px; font-size: 28px; }
+.lib-item.focused { background: #fff; color: #0c0c0e; }
+.lib-item-label { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lib-item-sub { margin-left: 20px; font-size: 22px; color: rgba(255, 255, 255, 0.5); white-space: nowrap; }
+.lib-item.focused .lib-item-sub { color: rgba(0, 0, 0, 0.55); }
+.lib-more { margin-top: 10px; font-size: 20px; color: rgba(255, 255, 255, 0.4); }
+
+.lib-video { position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: #000; }
+.lib-video .lib-media { width: 100%; height: 100%; }
+.lib-audio { position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: linear-gradient(to top, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.35)); }
+#library.open .lib-audio { background-color: transparent; }
+.lib-audio-art { position: absolute; left: 50%; top: 150px; width: 420px; height: 420px; margin-left: -210px; border-radius: 30px; overflow: hidden; background: #1a1d24; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5); }
+.lib-audio-art img { width: 100%; height: 100%; object-fit: contain; }
+.lib-hud { position: absolute; left: 0; right: 0; bottom: 0; padding: 60px 100px 50px; background: linear-gradient(to top, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0)); opacity: 0; transition: opacity 0.4s ease; }
+.lib-hud.on { opacity: 1; }
+.lib-hud-title { font-size: 44px; font-weight: 600; }
+.lib-hud-sub { margin-top: 6px; font-size: 26px; color: rgba(255, 255, 255, 0.7); }
+.lib-bar { margin-top: 24px; height: 8px; border-radius: 4px; background: rgba(255, 255, 255, 0.25); }
+.lib-bar-fill { width: 0; height: 100%; border-radius: 4px; background: #fff; }
+.lib-hud-time { margin-top: 12px; font-size: 24px; font-variant-numeric: tabular-nums; }
+.lib-hud-status { min-height: 30px; margin-top: 6px; font-size: 24px; color: #ffb224; }
+.lib-hud-keys { font-size: 20px; color: rgba(255, 255, 255, 0.45); }
+
+.lib-reader { position: absolute; top: 0; right: 0; bottom: 0; left: 0; overflow-y: scroll; background: #191612; }
+.lib-page { width: 1180px; margin: 0 auto; padding: 90px 0 400px; color: #ece3d0; font-family: Georgia, 'Times New Roman', serif; }
+.lib-book { font-family: inherit; font-size: 24px; color: rgba(236, 227, 208, 0.5); }
+.lib-chapter { margin: 18px 0 40px; font-size: 56px; line-height: 1.15; }
+.lib-para { margin: 0 0 30px; font-size: 40px; line-height: 1.6; border-radius: 12px; transition: background-color 0.3s ease; }
+.lib-para.speaking { background: rgba(255, 210, 120, 0.14); box-shadow: 0 0 0 14px rgba(255, 210, 120, 0.14); }
+.lib-end { margin-top: 60px; font-size: 30px; color: rgba(236, 227, 208, 0.5); text-align: center; }
+.lib-reader-keys { position: fixed; left: 0; right: 0; bottom: 0; padding: 18px; text-align: center; font-size: 22px; color: rgba(236, 227, 208, 0.7); background: rgba(25, 22, 18, 0.92); }
+
+/* ---------- Home devices (js/devices.js) ---------- */
+#devices { position: absolute; top: 0; right: 0; bottom: 0; left: 0; display: none; background: #0e1216; overflow: hidden; }
+#devices.open { display: block; }
+.dv-page { position: absolute; top: 0; right: 0; bottom: 0; left: 0; padding: 60px 0 0 90px; }
+.dv-head { display: flex; align-items: baseline; justify-content: space-between; padding-right: 90px; }
+.dv-title { font-size: 52px; font-weight: 600; }
+.dv-hint { font-size: 24px; color: rgba(255, 255, 255, 0.55); }
+.dv-empty { padding: 140px; font-size: 32px; color: rgba(255, 255, 255, 0.6); }
+.dv-rooms { position: absolute; top: 160px; left: 90px; right: 0; transition: transform 0.3s var(--ease); }
+.dv-room { height: 330px; }
+.dv-roomname { font-size: 26px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255, 255, 255, 0.5); }
+.dv-room.focused .dv-roomname { color: #fff; }
+.dv-strip { display: flex; margin-top: 16px; transition: transform 0.25s var(--ease); }
+.dv-card { flex: none; box-sizing: border-box; width: 300px; height: 230px; margin-right: 30px; padding: 26px 28px; border-radius: 28px; background: rgba(255, 255, 255, 0.07); transition: transform 0.2s var(--ease), background-color 0.2s ease; }
+.dv-card.on { background: rgba(255, 196, 80, 0.20); }
+.dv-card.on .dv-icon { color: #ffc450; }
+.dv-card.focused { transform: scale(1.06); box-shadow: 0 0 0 5px #fff; }
+.dv-card.armed { box-shadow: 0 0 0 5px #ffb224; }
+.dv-icon { width: 56px; height: 56px; color: rgba(255, 255, 255, 0.7); }
+.dv-group { margin-top: 14px; font-size: 19px; color: rgba(255, 255, 255, 0.5); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dv-name { margin-top: 4px; font-size: 30px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dv-card .dv-group + .dv-name { margin-top: 2px; }
+.dv-state { margin-top: 6px; font-size: 22px; color: rgba(255, 255, 255, 0.65); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dv-card.armed .dv-state { color: #ffb224; }
+.dv-popup { position: absolute; left: 50%; top: 50%; width: 760px; margin: -170px 0 0 -380px; box-sizing: border-box; padding: 44px 50px; border-radius: 36px; background: #1c2229; box-shadow: 0 30px 100px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.1); }
+.dv-pop-title { font-size: 38px; font-weight: 600; }
+.dv-pop-state { margin-top: 10px; font-size: 26px; color: rgba(255, 255, 255, 0.7); }
+.dv-bar { margin-top: 30px; height: 16px; border-radius: 8px; background: rgba(255, 255, 255, 0.15); }
+.dv-fill { height: 100%; border-radius: 8px; background: #ffc450; }
+.dv-pop-keys { margin-top: 30px; font-size: 22px; color: rgba(255, 255, 255, 0.5); }

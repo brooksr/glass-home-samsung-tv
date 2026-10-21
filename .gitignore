@@ -1,6 +1,11 @@
 # Per-checkout secret shared by the app and its service (scripts make it)
 app/js/local-key.js
 
+# This home's settings (addresses, location, Home Assistant token): .env and
+# the app/js/env.js that scripts/make-env-js.js writes from it
+.env
+app/js/env.js
+
 # Your settings and anything certificate-related
 scripts/tizen-env.sh
 *.p12

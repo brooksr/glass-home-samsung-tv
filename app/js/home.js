@@ -148,10 +148,14 @@
 
   function buildItems() {
     var list = [];
+    if (GH.babyLog) list.push({ kind: 'baby', key: 'baby', label: 'BabySteps', icon: 'img/babysteps.png' });
+    if (GH.panels) list.push({ kind: 'weather', key: 'weather', label: 'Weather' });
+    if (GH.library) list.push({ kind: 'library', key: 'library', label: 'Library', icon: 'img/library.svg' });
+    if (GH.devices) list.push({ kind: 'home', key: 'home', label: 'Home', icon: 'img/home.svg' });
     orderedAppKeys().forEach(function (k) {
       var a = apps[k];
       if (!a || hidden.indexOf(k) >= 0) return;
-      list.push({ kind: 'app', key: 'app:' + k, appKey: k, label: defByKey[k].label, id: a.id,
+      list.push({ kind: 'app', key: 'app:' + k, appKey: k, label: defByKey[k].label, id: a.id, storeId: defByKey[k].storeId,
         icon: defByKey[k].icon === false ? null : (defByKey[k].icon || P.iconUrl(a.iconPath)) });
     });
     shortcuts.forEach(function (s) {
@@ -161,7 +165,8 @@
         icon: s.icon ? D.media(s.icon) : null, iconW: s.iconW || 0
       });
     });
-    list.push({ kind: 'add', key: 'add', label: 'Add photos and shortcuts' });
+    if (GH.panels) list.push({ kind: 'monitor', key: 'monitor', label: 'Monitor' });
+    if (cfg.photoService) list.push({ kind: 'add', key: 'add', label: 'Add photos and shortcuts' });
     return list;
   }
 
@@ -245,7 +250,7 @@
     var face = div('face');
     el.appendChild(face);
     var img;
-    if (it.kind === 'app') {
+    if (it.kind === 'app' || it.kind === 'baby' || it.kind === 'library' || it.kind === 'home') {
       if (it.icon) {
         img = new Image();
         img.className = 'app-icon';
@@ -256,6 +261,8 @@
       } else {
         face.appendChild(div('name-fallback', it.label));
       }
+    } else if (it.kind === 'weather' || it.kind === 'monitor') {
+      GH.panels.face(it.kind, face);
     } else if (it.kind === 'web') {
       if (it.icon) {
         img = new Image();
@@ -386,11 +393,29 @@
   }
 
   // ---------- opening things ----------
+  var launchGuard = null;
   function activate(it) {
     if (!it) return;
     if (it.kind === 'add') { openPanel(); return; }
+    if (it.kind === 'baby') { GH.babyLog.open(); return; }
+    if (it.kind === 'weather' || it.kind === 'monitor') { GH.panels.open(it.kind); return; }
+    if (it.kind === 'library') { GH.library.open(); return; }
+    if (it.kind === 'home') { GH.devices.open(); return; }
     var p;
-    if (it.kind === 'app') p = P.launchApp(it.id);
+    // Drop the photo and dock layers before the app starts: on a 2018 TV
+    // Netflix and Prime Video fail to start while they hold graphics memory.
+    // Back on screen (onVisibility) or if the launch fails, they come back.
+    if (it.kind === 'app' && !cfg.preview) {
+      document.documentElement.classList.add('launching');
+      if (backdrop) backdrop.pause();
+      clearTimeout(launchGuard);
+      launchGuard = setTimeout(function () {    // still on screen: the app never came up
+        if (document.hidden) return;
+        document.documentElement.classList.remove('launching');
+        if (backdrop) backdrop.resume();
+      }, 8000);
+    }
+    if (it.kind === 'app') p = P.launchApp(it.id, it.storeId);
     else if (it.kind === 'web') p = P.openUrl(it.url);
     else p = P.openYouTube(it, ytMode);
     p.then(function (how) {
@@ -398,6 +423,8 @@
       else if (how === 'youtube-home') toast('YouTube opened, but not at this video');
       else if (how === 'browser-home') toast('The browser opened without the address');
     }, function (e) {
+      document.documentElement.classList.remove('launching');
+      if (backdrop && !document.hidden) backdrop.resume();
       toast('Couldn’t open ' + it.label + (e && e.message ? ' (' + e.message + ')' : ''), 4500);
     });
   }
@@ -409,7 +436,7 @@
 
   function openMenu() {
     var it = items[focus];
-    if (!it || it.kind === 'add') return;
+    if (!it || it.kind === 'add' || it.kind === 'baby' || it.kind === 'weather' || it.kind === 'monitor' || it.kind === 'library' || it.kind === 'home') return;
     var group = groupOf(it);
     var gi = group.indexOf(it);
     menuItems = [
@@ -703,10 +730,12 @@
         var file = w.file || w.src || w.path;
         if (!file) return null;
         return {
-          key: 'w:' + file,
+          key: 'w:' + base + file,
           url: base + file,
           credit: [w.title, w.author, w.licence_short || shortLicence(w.licence || w.license)].filter(Boolean).join(' · '),
-          user: false
+          user: false,
+          time: w.time || null,          // e.g. ['golden', 'night'] (see skyMood)
+          weather: w.weather || null     // e.g. ['clear', 'fog']
         };
       }).filter(Boolean);
     }
@@ -716,7 +745,54 @@
       return GH.request('GET', '/preview-assets/manifest.json', undefined, 3000).then(function (r2) {
         return parse(r2, '/preview-assets/') || [];
       });
-    }).then(function (list) { bundled = list; });
+    }).then(function (list) {
+      bundled = list;
+      // Photos kept off the TV (it is short of space), e.g. in Home Assistant's
+      // /config/www, which HA serves without sign-in at /local/.
+      var remote = cfg.photos && cfg.photos.remoteManifest;
+      if (!remote || cfg.preview && !Q.remote) return;
+      return GH.request('GET', remote, undefined, 6000).then(function (r) {
+        var more = parse(r, remote.replace(/[^\/]*$/, ''));
+        if (more && more.length) bundled = bundled.concat(more);
+      }, function () { /* the built-in photos still work */ });
+    });
+  }
+
+  // ---------- photos that match the sky ----------
+  // Time of day from the sunrise and sunset in js/weather.js (else the clock),
+  // and the weather from its WMO code.
+  function skyMood(now) {
+    var sky = GH.sky || {};
+    var t = now.getTime();
+    var rise = sky.sunrise;
+    var set = sky.sunset;
+    if (!rise || !set) {
+      var d = new Date(now);
+      d.setHours(7, 0, 0, 0); rise = d.getTime();
+      d.setHours(18, 30, 0, 0); set = d.getTime();
+    }
+    var H = 3600 * 1000;
+    var time = t >= rise - 0.75 * H && t < rise + H ? 'dawn'
+      : t >= set - 1.5 * H && t < set + 0.5 * H ? 'golden'
+      : t >= rise && t < set ? 'day' : 'night';
+    var c = sky.code;
+    var weather = c == null ? null
+      : c <= 2 ? 'clear'
+      : c === 45 || c === 48 ? 'fog'
+      : (c >= 51 && c <= 67) || (c >= 80 && c <= 82) || c >= 95 ? 'rain'
+      : 'cloudy';
+    return { time: time, weather: weather };
+  }
+
+  // Tagged photos matching both, else the time alone, else every photo.
+  function matchingPhotos(all) {
+    if (!cfg.photos || cfg.photos.matchSky === false) return all;
+    var m = skyMood(new Date());
+    function has(list, v) { return !!list && list.indexOf(v) >= 0; }
+    var both = all.filter(function (p) { return has(p.time, m.time) && (!m.weather || has(p.weather, m.weather)); });
+    if (both.length >= 3) return both;
+    var byTime = all.filter(function (p) { return has(p.time, m.time); });
+    return byTime.length >= 3 ? byTime : all;
   }
 
   // Photos uploaded since the TV last looked are shown next ("fresh"); the
@@ -731,8 +807,13 @@
       return { key: 'u:' + p.id, url: D.media(p.url), credit: '', user: true, fresh: !!known && !knownSet[p.id] };
     });
     if (st && st.photos) ls.set('gh.bg.known', list.map(function (p) { return p.id; }));
-    backdrop.setPhotos(bundled.concat(user));
+    var list2 = matchingPhotos(bundled).concat(user);
+    var sig = list2.map(function (p) { return p.key; }).join('|');
+    if (sig === photoSig) return;
+    photoSig = sig;
+    backdrop.setPhotos(list2);
   }
+  var photoSig = '';
 
   var creditTimer = null;
   function showCredit(it) {
@@ -747,6 +828,7 @@
 
   // ---------- service ----------
   function refresh() {
+    if (!cfg.photoService) return Promise.resolve({ online: false });
     return D.refresh().then(function (r) {
       serviceUp = r.online;
       if (r.changed) {
@@ -769,7 +851,7 @@
   // Makes sure the photo service runs (it does not survive a reboot under a
   // public certificate, and the platform may reclaim it), then syncs.
   function ensureService() {
-    if (ensuring) return;
+    if (ensuring || !cfg.photoService) return;
     ensuring = true;
     clearTimeout(retryTimer);
     D.health(2000).then(function (ok) {
@@ -808,7 +890,7 @@
       if (backdrop) backdrop.pause();
       return;
     }
-    document.documentElement.classList.remove('paused');
+    document.documentElement.classList.remove('paused', 'launching');
     renderClock();
     clearInterval(clockTimer);
     clearInterval(pollTimer);
@@ -874,8 +956,11 @@
     });
     loadManifest().then(function () {
       updatePhotos();
-      var first = Q.bg ? (/^\d+$/.test(Q.bg) && bundled[+Q.bg] ? bundled[+Q.bg].key : 'w:' + Q.bg) : null;
+      var first = Q.bg ? (/^\d+$/.test(Q.bg) && bundled[+Q.bg] ? bundled[+Q.bg].key : 'w:wallpapers/' + Q.bg) : null;
       backdrop.start(first);
+      // New weather or a new part of the day: the next photo comes from the new set.
+      document.addEventListener('gh-sky', updatePhotos);
+      setInterval(updatePhotos, 10 * 60 * 1000);
     });
 
     document.addEventListener('keydown', onKeyDown, true);
