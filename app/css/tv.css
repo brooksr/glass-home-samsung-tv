@@ -186,7 +186,7 @@ html, body {
   font-variant-numeric: tabular-nums;
 }
 #wx-now-text {
-  margin-left: 4px;
+  margin-left: 16px;                /* the 12px between items, plus 4 */
   color: var(--text-2);
   white-space: pre;
 }
