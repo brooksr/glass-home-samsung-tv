@@ -736,7 +736,8 @@
           user: false,
           time: w.time || null,          // e.g. ['golden', 'night'] (see skyMood)
           weather: w.weather || null,    // e.g. ['clear', 'fog']
-          holiday: w.holiday || null     // only shown in its season (see holidayNow)
+          holiday: w.holiday || null,    // only shown in its season (see holidayNow)
+          month: w.month || null         // e.g. [12]: only shown in December
         };
       }).filter(Boolean);
     }
@@ -803,21 +804,26 @@
   }
 
   // Tagged photos matching both, else the time alone, else every photo; in a
-  // holiday's season its photos join them (by time of day when 3 or more fit).
-  // Holiday photos never show out of season.
+  // holiday's season its photos join them (by time of day when 3 or more fit),
+  // and in each month that month's photos that fit the time of day. Holiday
+  // and month photos never show out of season. ?month=12 overrides the month
+  // in a preview.
   function matchingPhotos(all) {
     var now = new Date();
     function has(list, v) { return !!list && list.indexOf(v) >= 0; }
-    var regular = all.filter(function (p) { return !p.holiday; });
+    var regular = all.filter(function (p) { return !p.holiday && !p.month; });
     var h = holidayNow(now);
     var festive = h ? all.filter(function (p) { return p.holiday === h; }) : [];
-    if (!cfg.photos || cfg.photos.matchSky === false) return regular.concat(festive);
+    var month = /^\d+$/.test(Q.month || '') ? +Q.month : now.getMonth() + 1;
+    var monthly = all.filter(function (p) { return has(p.month, month); });
+    if (!cfg.photos || cfg.photos.matchSky === false) return regular.concat(festive, monthly);
     var m = skyMood(now);
     var base = regular.filter(function (p) { return has(p.time, m.time) && (!m.weather || has(p.weather, m.weather)); });
     if (base.length < 3) base = regular.filter(function (p) { return has(p.time, m.time); });
     if (base.length < 3) base = regular;
     var festiveNow = festive.filter(function (p) { return has(p.time, m.time); });
-    return base.concat(festiveNow.length >= 3 ? festiveNow : festive);
+    return base.concat(festiveNow.length >= 3 ? festiveNow : festive,
+      monthly.filter(function (p) { return has(p.time, m.time); }));
   }
 
   // Photos uploaded since the TV last looked are shown next ("fresh"); the

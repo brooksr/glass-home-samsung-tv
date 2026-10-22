@@ -1,17 +1,20 @@
-# Downloads holiday picks at 1920 px and writes their manifest entries.
-# python3 -I fetch-holiday.py candidates.json holiday-picks.txt raw/
-# Each pick line: candidate index, holiday, times of day (comma-separated).
+# Downloads holiday or month picks at 1920 px and writes their manifest entries.
+# python3 -I fetch-seasonal.py candidates.json picks.txt raw/
+# Each pick line: candidate index, holiday or month name, times of day
+# (comma-separated). Months get `month: [n]`, holidays `holiday: name`.
 import json, sys, time, re, os, urllib.parse, urllib.request, urllib.error
 cands, picks, rawdir = json.load(open(sys.argv[1])), sys.argv[2], sys.argv[3]
+MONTHS = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august',
+          'september', 'october', 'november', 'december']
 UA = {'User-Agent': 'RocheHome/1.0 (personal TV wallpaper picker)'}
 out, count = [], {}
 for line in open(picks).read().split('\n'):
     line = line.split('#')[0].strip()
     if not line: continue
-    idx, holiday, times = line.split()
+    idx, season, times = line.split()
     c = cands[int(idx)]
-    count[holiday] = count.get(holiday, 0) + 1
-    fn = '%s-%02d.jpg' % (holiday, count[holiday])
+    count[season] = count.get(season, 0) + 1
+    fn = '%s-%02d.jpg' % (season, count[season])
     name = c['title'].split(':', 1)[1]
     raw = os.path.join(rawdir, fn)
     if not os.path.exists(raw):
@@ -24,7 +27,10 @@ for line in open(picks).read().split('\n'):
                 if e.code != 429: print(fn, e.code, file=sys.stderr); break
     title = c['desc'] or re.sub(r'\.(jpe?g|png|tiff?)$', '', name, flags=re.I).replace('_', ' ')
     title = re.split(r'(?<=[a-z])\. ', title)[0][:90]
-    out.append({'file': fn, 'title': title, 'author': c['author'], 'licence': c['licence'], 'source': c['page'],
-                'holiday': holiday, 'time': times.split(',')})
-json.dump(out, open(os.path.join(rawdir, 'holiday-manifest.json'), 'w'), indent=1)
+    e = {'file': fn, 'title': title, 'author': c['author'], 'licence': c['licence'], 'source': c['page']}
+    if season in MONTHS: e['month'] = [MONTHS.index(season) + 1]
+    else: e['holiday'] = season
+    e['time'] = times.split(',')
+    out.append(e)
+json.dump(out, open(os.path.join(rawdir, 'seasonal-manifest.json'), 'w'), indent=1)
 print(len(out), count)

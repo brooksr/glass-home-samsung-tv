@@ -37,7 +37,21 @@ weeks before each holiday, and Dec 26-31 for New Year; see `holidayNow` in
 
 Made the same way: `search.py < holiday-queries.txt`, contact sheets by eye
 (no people in focus, no paintings), then
-`fetch-holiday.py candidates.json holiday-picks.txt raw/` (picks are
+`fetch-seasonal.py candidates.json holiday-picks.txt raw/` (picks are
 candidate indexes from the two search runs, merged) and `resize.py`. The
 Pi's manifest from before them is kept as `manifest.before-holidays.json`
 next to it.
+
+## Monthly photos
+
+31 more for October to January (8, 8, 7 and 8), named `<month>-NN.jpg`:
+Eastern Sierra aspens and a full moon in October, late fall colour, fog and
+migrating geese in November, Tahoe and Sierra snow and frost in December,
+Yosemite snow, a frozen lake and the winter coast (murres, sea lions, a
+harbor seal) in January. Entries have `month` (e.g. `[12]`) and `time`. The
+app adds a month's photos in that month only, and only those tagged for the
+current time of day. Made with `search.py < month-queries.txt`, then
+`fetch-seasonal.py candidates.json month-picks.txt raw/` and `resize.py`
+(candidates already in the manifest were dropped first). The Pi's manifest
+from before them is `manifest.before-months.json`. To add another month,
+add queries and picks the same way.
