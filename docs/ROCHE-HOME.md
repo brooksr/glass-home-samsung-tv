@@ -40,6 +40,7 @@ TV; take photos of anything you care about.
 | Weather and Monitor tiles | new `app/js/panels.js`; `#sheet` in `index.html`; tiles added in `buildItems` (`home.js`), Weather second, Monitor last; `weather.js` shares its icons (`GH.wxIcon`) | See [Weather and Monitor pages](#weather-and-monitor-pages) |
 | Library tile | new `app/js/library.js`; `library` in `config.js`; `#library` in `index.html`; icon `app/img/library.svg`; `GH.ha.ttsUrl` in `homeassistant.js`; catalogue and books on the Pi, see [tools/library](../tools/library/README.md) | See [Library](#library) |
 | Home tile | new `app/js/devices.js`; `home` in `config.js`; `#devices` in `index.html`; icon `app/img/home.svg`; `GH.ha.call` / `GH.ha.template` in `homeassistant.js` | See [Home devices](#home-devices) |
+| Launcher icon | `assets/roche-home-icon.png` (a TV with the Home Assistant house) installed with `scripts/use-logo.sh assets/roche-home-icon.png` → `app/icon.png` and the phone site's icons | Upstream's Glass Home logo |
 | YouTube and Prime Video icons | `app/img/youtube.svg`, `app/img/primevideo.png` | Both apps report Tizen's pinwheel placeholder as their icon |
 | Weather: icon, outside and inside temperature only | `weather` in `config.js` (coordinates from `.env`, `temperatureUnit: 'fahrenheit'`); `weather.js` adds `temperature_unit` to the Open-Meteo URL (cache key now `gh.weather.v2`); forecast and high/low hidden in `tv.css`; markup in `index.html` | Asked for |
 | BabySteps card and inside temperature from Home Assistant | new `app/js/homeassistant.js`; `homeAssistant` in `config.js`; `#ha` in `index.html`; card styles at the end of `tv.css` | Asked for |
@@ -160,6 +161,40 @@ adds entries), so end those in the app. Preview with `?baby=1` or `?baby=feed`.
   HA under your profile → Security → Long-lived access tokens.
   Without it the card and inside temperature simply don't appear.
   Revoke it in the same HA page if the TV is ever sold or reset.
+
+## Switching inputs: what was tried (not built)
+
+A Source tile was tried on 2026-10-22 and dropped: nothing an app can do here
+beats the remote's Source button. Findings, for any later attempt:
+
+- **Listing inputs works.** `tizen.systeminfo.getPropertyValue('VIDEOSOURCE')`
+  (no privilege) returns `connected` / `disconnected` lists, e.g. TV 1 and
+  HDMI 1 (Chromecast) connected, HDMI 2 empty. No HDMI-CEC device names.
+- **The TV's remote API doesn't answer apps on the TV.** A WebSocket to
+  `ws://127.0.0.1:8001` or `wss://127.0.0.1:8002`
+  `/api/v2/channels/samsung.remote.control` opens but never sends
+  `ms.channel.connect`, even after Allow is chosen. From the Mac it works
+  (`tools/tvremote.py`).
+- **Home Assistant can press keys** (`remote.send_command` on
+  `remote.samsung_6_series_55_un55nu6900`, already paired):
+  - `KEY_SOURCE` opens Samsung's launcher on Source (same as the remote).
+  - `KEY_HDMI1` does nothing on this TV.
+  - `KEY_HDMI` steps to the next input (TV → HDMI 1 → TV …), so the result
+    depends on the current input. It is ignored while TV Plus is still
+    starting.
+  - `KEY_TV` goes to the antenna input, which (with no channels tuned) opens
+    Samsung TV Plus.
+  - Sending `["KEY_TV", "KEY_HDMI"]` in one call didn't reliably reach
+    HDMI 1: the integration seems to ignore `delay_secs`. A reliable
+    Chromecast switch would need an HA script (KEY_TV, wait ~5 s, KEY_HDMI).
+    The app can't do the wait itself: Tizen suspends it once another input
+    is in front.
+- **USB drive:** apps can't open the TV's USB browser.
+  `tizen.application.launch('com.samsung.tv.mycontents')` (and
+  `org.tizen.SMSourceAPP`, the Source list) report success but show
+  nothing. Samsung's launcher at `:8001/api/v2/applications/<id>` only knows
+  store apps (404 for these). Reading the drive directly needs the
+  `filesystem.read` privilege, which this build doesn't have.
 
 ## Build and install
 
