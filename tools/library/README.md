@@ -13,7 +13,7 @@ stores only resume points.
   turns each Gutenberg text into `books/pg<n>.json` (chapters of paragraphs,
   headers/footers and `_italics_` marks removed) plus its cover. Fetches go
   through curl (this Mac's Python rejects some valid certificates).
-- Upload: `scp OUT/catalog.json "$PI_SSH:$PI_WWW/roche-home/library/"` (both in `.env`)
+- Upload: `scp OUT/catalog.json "$HA_SSH:$HA_WWW/roche-home/library/"` (both in `.env`)
   and `scp OUT/books/* …/library/books/`. HA serves them at
   `$HA_URL/local/roche-home/library/` (`library.base` in
   `app/js/config.js`). No app reinstall needed for catalogue changes.

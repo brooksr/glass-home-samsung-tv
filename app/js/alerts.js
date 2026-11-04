@@ -8,6 +8,7 @@
  *   air quality    sensor.local_air_quality: AQI above 100
  *   weather        sensor.local_weather_alerts: each active NWS alert
  *   power          POWER_SHUTOFF in .env: SCE shutoff active or being considered
+ *   cooling        binary_sensor.cooler_air_outside: indoors >=74°F, outdoors cooler
  * "Up next" (under the weather) lists at most two things within 4 hours:
  *   rocket launches from LAUNCHES in .env, and the trash or street
  *   sweeping evening reminder from sensor.household_schedule.
@@ -72,7 +73,7 @@
     return s && s.attributes && !s.attributes.error ? s.attributes : null;
   }
 
-  // ---------- banners: [{ level: 'red'|'amber', title, detail }] ----------
+  // ---------- banners: [{ level: 'red'|'amber'|'info', title, detail }] ----------
   function fireBanners(now) {
     var a = attrs('fire');
     var out = [];
@@ -117,9 +118,20 @@
     return [];
   }
 
+  function coolingBanners() {
+    var s = fresh('cooling');
+    var a = attrs('cooling');
+    var checked = a && parse(a.checked_at);
+    if (!s || s.state !== 'on' || !a || !checked || Date.now() - checked > 5 * 60 * 1000) return [];
+    var inside = a.indoor_temperature;
+    var outside = a.outdoor_temperature;
+    if (typeof inside !== 'number' || typeof outside !== 'number' || !isFinite(inside) || !isFinite(outside)) return [];
+    return [{ level: 'info', title: 'Cooler outside', detail: Math.round(inside * 10) / 10 + '°F inside · ' + Math.round(outside * 10) / 10 + '°F outside' }];
+  }
+
   function renderBanners() {
     var now = Date.now();
-    var list = [].concat(powerBanners(), fireBanners(now), quakeBanners(), weatherBanners(), airBanners());
+    var list = [].concat(powerBanners(), fireBanners(now), quakeBanners(), weatherBanners(), airBanners(), coolingBanners());
     while (bannerRoot.firstChild) bannerRoot.removeChild(bannerRoot.firstChild);
     list.slice(0, 3).forEach(function (b) {
       var n = el('div', 'banner ' + b.level);
@@ -188,7 +200,7 @@
     start();
   });
 
-  if (GH.config.preview && GH.query && GH.query.alerts === 'mock') {
+  if (GH.config.preview && GH.query && (GH.query.alerts === 'mock' || GH.query.alerts === 'cooling')) {
     var soon = new Date(Date.now() + 95 * 60 * 1000).toISOString();
     var mock = {
       fire: { attributes: { incidents: [{ type: 'Vegetation Fire', fire: true, miles: 2.4, city: 'Springfield', status: 'On scene' }] } },
@@ -197,6 +209,7 @@
       launch: { attributes: { launches: [{ rocket: 'Falcon 9', mission: 'Starlink Group 15-15', net: soon, status: 'Go', view: 'night' }] } },
       household: { attributes: { trash_tomorrow: true } }
     };
+    if (GH.query.alerts === 'cooling') mock = { cooling: { state: 'on', attributes: { indoor_temperature: 76, outdoor_temperature: 69, checked_at: new Date().toISOString() } } };
     Object.keys(mock).forEach(function (k) { mock[k].readAt = Date.now(); states[k] = mock[k]; });
     render();
     return;

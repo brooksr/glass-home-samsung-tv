@@ -6,10 +6,12 @@
  * Ventura, Down shows Malibu (sensor.daytrip from ../rpi: drive time, air and
  * water, wind, surf and swell now and every 3 hours, tides). Back closes.
  *
- * Monitor (last in the dock): the tile shows a dot each for the TV, the
- * Raspberry Pi and the internet; OK opens the details. TV figures come from
- * tizen.systeminfo; Pi and internet from sensor.raspberry_pi, sensor.internet
- * and the Pi-hole sensors.
+ * Monitor (last in the dock): the tile shows a dot each for the TV, the laptop
+ * running Home Assistant, the Raspberry Pi and the internet; OK opens the details.
+ * TV figures come from tizen.systeminfo; the HA server from
+ * sensor.raspberry_pi (the HA host; the id predates HA moving off the Pi), the
+ * Pi from sensor.pi_health (pushed by the Pi when HA runs elsewhere) and the
+ * Pi-hole sensors, the internet from sensor.internet.
  *
  * The forecast is read from Open-Meteo directly (hourly is not in
  * js/weather.js); everything else from Home Assistant via GH.ha. Like
@@ -28,7 +30,7 @@
   var tz = typeof window.tizen !== 'undefined' ? window.tizen : null;
   var E = {
     insideTemp: (cfg.homeAssistant || {}).insideTemperature, insideHumidity: (cfg.homeAssistant || {}).insideHumidity,
-    air: 'sensor.local_air_quality', daytrip: 'sensor.daytrip', pi: 'sensor.raspberry_pi',
+    air: 'sensor.local_air_quality', daytrip: 'sensor.daytrip', server: 'sensor.raspberry_pi', pi: 'sensor.pi_health',
     internet: 'sensor.internet', uptime: 'sensor.internet_uptime', piholeStatus: 'binary_sensor.pi_hole_status',
     piholeBlocked: 'sensor.pi_hole_ads_blocked', piholePercent: 'sensor.pi_hole_ads_percentage_blocked'
   };
@@ -293,18 +295,38 @@
     return rows;
   }
 
-  function piRows() {
-    var a = attrs('pi');
+  // CPU, temperature, memory, swap, disk, power and uptime from a
+  // local-system-status.py reading (../rpi), for the HA server and the Pi alike.
+  function hostRows(a) {
     var rows = [];
-    if (!a) return [['Raspberry Pi', 'no answer from Home Assistant', 'bad']];
-    rows.push(['Home Assistant', 'answering', 'ok']);
     if (num(a.cpu_percent)) rows.push(['CPU', Math.round(a.cpu_percent) + '%' + (a.load ? ' · load ' + a.load[0] : ''), a.cpu_percent > 95 ? 'warn' : 'ok']);
     if (num(a.temperature_c)) rows.push(['Temperature', round1(a.temperature_c) + ' °C', a.temperature_c >= 80 ? 'bad' : a.temperature_c >= 70 ? 'warn' : 'ok']);
-    if (num(a.memory_percent)) rows.push(['Memory', Math.round(a.memory_percent) + '% used · ' + a.memory_available_mb + ' MB free', a.memory_percent >= 92 ? 'bad' : a.memory_percent >= 85 ? 'warn' : 'ok']);
-    if (num(a.swap_percent)) rows.push(['Swap', Math.round(a.swap_percent) + '% used', a.swap_percent >= 90 ? 'bad' : a.swap_percent >= 75 ? 'warn' : 'ok']);
+    if (num(a.memory_percent)) rows.push(['Memory', Math.round(a.memory_percent) + '% used · ' + (a.memory_available_mb >= 1024 ? round1(a.memory_available_mb / 1024) + ' GB' : a.memory_available_mb + ' MB') + ' free', a.memory_percent >= 92 ? 'bad' : a.memory_percent >= 85 ? 'warn' : 'ok']);
+    if (num(a.swap_percent) && (a.swap_percent > 0 || a.undervoltage != null)) rows.push(['Swap', Math.round(a.swap_percent) + '% used', a.swap_percent >= 90 ? 'bad' : a.swap_percent >= 75 ? 'warn' : 'ok']);
     if (num(a.disk_free_gb)) rows.push(['Disk', round1(a.disk_free_gb) + ' GB free (' + Math.round(a.disk_percent) + '% used)', a.disk_percent >= 90 ? 'bad' : a.disk_percent >= 80 ? 'warn' : 'ok']);
-    rows.push(['Power', a.undervoltage ? 'under-voltage!' : 'OK', a.undervoltage ? 'bad' : 'ok']);
+    if (a.undervoltage != null) rows.push(['Power', a.undervoltage ? 'under-voltage!' : 'OK', a.undervoltage ? 'bad' : 'ok']);
+    var b = a.battery;
+    if (b) rows.push(['Battery', b.percent + '% · ' + (b.ac_online === false ? 'on battery!' : 'on AC') + (b.health_percent ? ' · health ' + b.health_percent + '%' : ''), b.ac_online === false ? 'bad' : 'ok']);
     if (num(a.uptime_hours)) rows.push(['Uptime', ago(a.uptime_hours), null]);
+    return rows;
+  }
+
+  function serverRows() {
+    var a = attrs('server');
+    if (!a) return [['HA', 'no answer', 'bad']];
+    return [['HA', 'answering', 'ok']].concat(hostRows(a));
+  }
+
+  function piRows() {
+    var rows = [];
+    var a = attrs('pi');
+    var age = a && a.checked_at ? (Date.now() - new Date(a.checked_at).getTime()) / 60000 : null;
+    if (!a) rows.push(['Raspberry Pi', attrs('server') ? 'not reporting' : 'no answer from Home Assistant', 'bad']);
+    else {
+      // The Pi reports every 10 minutes; three missed reports means it is down.
+      rows.push(['Reported', age == null ? 'unknown' : age < 1 ? 'just now' : Math.round(age) + ' min ago', age != null && age < 30 ? 'ok' : 'bad']);
+      rows = rows.concat(hostRows(a));
+    }
     var ph = states.piholeStatus;
     if (ph) rows.push(['Pi-hole', (ph.state === 'on' ? 'on' : 'off') + (value('piholeBlocked') != null ? ' · ' + Math.round(value('piholeBlocked')) + ' blocked today' : ''), ph.state === 'on' ? 'ok' : 'warn']);
     return rows;
@@ -356,6 +378,7 @@
     card.appendChild(head);
     var cols = el('div', 'mon-cols');
     cols.appendChild(column('TV', tvRows()));
+    cols.appendChild(column('Laptop · HA', serverRows()));
     cols.appendChild(column('Raspberry Pi', piRows()));
     cols.appendChild(column('Internet', netRows()));
     card.appendChild(cols);
@@ -377,7 +400,7 @@
     var m = faces.monitor;
     if (m) {
       clear(m);
-      [['TV', worst(tvRows())], ['Pi', worst(piRows())], ['Net', worst(netRows())]].forEach(function (r) {
+      [['TV', worst(tvRows())], ['Laptop', worst(serverRows())], ['Pi', worst(piRows())], ['Net', worst(netRows())]].forEach(function (r) {
         var row = el('div', 'tile-mon-row');
         row.appendChild(el('span', 'dot small ' + r[1]));
         row.appendChild(el('span', '', r[0]));

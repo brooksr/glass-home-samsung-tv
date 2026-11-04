@@ -39,6 +39,8 @@ TV; take photos of anything you care about.
 | Monthly photos | `month` tag in the photo manifest; `matchingPhotos` in `home.js`; 31 photos on the Pi (8 October, 8 November, 7 December, 8 January), see [tools/sky-photos](../tools/sky-photos/README.md) | Asked for. Each month's photos join the rotation in that month only, and only those tagged for the current time of day (no fallback). Preview with `?month=12`. |
 | Weather and Monitor tiles | new `app/js/panels.js`; `#sheet` in `index.html`; tiles added in `buildItems` (`home.js`), Weather second, Monitor last; `weather.js` shares its icons (`GH.wxIcon`) | See [Weather and Monitor pages](#weather-and-monitor-pages) |
 | Library tile | new `app/js/library.js`; `library` in `config.js`; `#library` in `index.html`; icon `app/img/library.svg`; `GH.ha.ttsUrl` in `homeassistant.js`; catalogue and books on the Pi, see [tools/library](../tools/library/README.md) | See [Library](#library) |
+| No built-in photos | upstream's 12 `app/wallpapers/` moved to `assets/wallpapers-extra/` (see its README); `loadManifest` in `home.js` loads only the Pi's list | The TV had 2 MB free and refused the 5.4 MB package (error 116); now 0.33 MB. Without the Pi, the stage's dark gradient shows |
+| Podcasts tile and Android app | new `app/js/podcasts.js`; `podcasts` in `config.js`; `#podcasts` in `index.html`; icon `app/img/podcasts.svg` (also the page title; the Android icons in `android/app/src/main/res/drawable/` are the same drawing); styles at the end of `tv.css`; screensaver held off in `ambient.js`; lists built on the HA laptop, see [tools/podcasts](../tools/podcasts/README.md); phone app in `android/` | See [Podcasts](#podcasts) |
 | Home tile | new `app/js/devices.js`; `home` in `config.js`; `#devices` in `index.html`; icon `app/img/home.svg`; `GH.ha.call` / `GH.ha.template` in `homeassistant.js` | See [Home devices](#home-devices) |
 | Launcher icon | `assets/roche-home-icon.png` (a TV with the Home Assistant house) installed with `scripts/use-logo.sh assets/roche-home-icon.png` → `app/icon.png` and the phone site's icons | Upstream's Glass Home logo |
 | YouTube and Prime Video icons | `app/img/youtube.svg`, `app/img/primevideo.png` | Both apps report Tizen's pinwheel placeholder as their icon |
@@ -57,12 +59,19 @@ TV; take photos of anything you care about.
 | Earthquake | `sensor.earthquakes` | its `alert` is set (M4.0+ in the last 30 min); red from M5 |
 | Weather | `sensor.local_weather_alerts` | any active NWS alert; red if Severe/Extreme |
 | Air quality | `sensor.local_air_quality` | AQI over 100; red over 150 |
+| Cooler outside | `binary_sensor.cooler_air_outside` | informational blue banner while the Govee indoor temperature is at least 74°F and the shared HA outdoor temperature is lower |
 
 At most three banners, at the top between the BabySteps card and the clock; they stay up during the screensaver.
 "Up next" (under the weather, at most two): Vandenberg launches within 4 hours
 (`LAUNCHES` in `.env`), and from 3 PM the evening before, "Trash out
 tonight" / "Move the car tonight" (`sensor.household_schedule`). Preview the
 layout with `app/index.html?alerts=mock` in desktop Chrome.
+
+Preview just the cooling banner with `?preview=1&alerts=cooling&still=1`.
+It uses the same Home Assistant condition as the HA Overview and the tablet/
+Office announcements (`../rpi/scripts/office-search/cooling_alert.yaml`).
+Missing, unavailable or stale condition data hides the TV banner. Safety
+warnings have priority within the existing three-banner limit.
 
 ### Weather and Monitor pages
 
@@ -80,13 +89,17 @@ Surf and wind were added to `../rpi/scripts/local-map/daytrip.py` for this
 deployed alone into HA's `/config/scripts/local-daytrip.py`, with the old one
 in `/config/backups/local-map/`; the HA sensor config didn't change.
 
-**Monitor** (tile shows a green/amber/red dot for TV, Pi and Net; OK opens the
-details):
+**Monitor** (tile shows a green/amber/red dot for TV, Laptop, Pi and Net; OK
+opens the details):
 - TV (`tizen.systeminfo`): internal storage (amber under 150 MB, red under
   50 MB), USB drive, memory, CPU, network, Roche Home uptime, software build.
-- Raspberry Pi (`sensor.raspberry_pi`, Pi-hole sensors): HA answering, CPU,
-  temperature (amber 70 °C, red 80 °C), memory, swap, disk, power
-  (under-voltage), uptime, Pi-hole on and ads blocked today.
+- Laptop · HA (`sensor.raspberry_pi`, the HA host; the id predates HA moving
+  off the Pi in October 2026): HA answering, CPU, temperature (amber 70 °C,
+  red 80 °C), memory, disk, battery (red when on battery), uptime.
+- Raspberry Pi (`sensor.pi_health`, pushed by the Pi every 10 minutes, and the
+  Pi-hole sensors): last report (red after 30 minutes), CPU, temperature,
+  memory, swap, disk, power (under-voltage), uptime, Pi-hole on and ads
+  blocked today.
 - Internet (`sensor.internet`, `sensor.internet_uptime`): status, ping to
   router/Cloudflare/Google, DNS via Pi-hole and router, HTTPS, uptime.
 
@@ -112,6 +125,68 @@ the catalogue from the Pi.
   one paragraph at a time, highlighted and kept in view. Each book's detail
   page also offers its LibriVox audiobook (a human reader).
 - Resume points live in the TV's localStorage (`gh.library.v1`).
+
+### Podcasts
+
+Tile after Library: 110 shows from the household's subscriptions
+(`tools/podcasts/sources.json`). Rows: Continue (started, not finished),
+Latest (the newest unplayed episodes across all shows), then the shows by
+category (News & Politics, Ideas & Culture, Science, History & Legends,
+Mysteries & UFOs, Tech, Comedy & Entertainment, Giants, Learning), most
+recently updated first. OK or Play on an episode plays it, resuming; OK on a
+show lists its newest 100 episodes (Up/Down, with each one's description).
+The first two rows there switch newest/oldest first and all/unplayed only,
+remembered per show.
+
+- **Playing**: OK pause, Left/Right −15 s/+30 s, Rew/FF previous/next chapter
+  (or −15/+30 s without chapters), Back stops and saves the place. Down opens
+  the menu: speed (0.8× to 2×), sleep timer (15–60 min or end of episode),
+  transcript, and the chapter list. The photos stay behind it and the
+  screensaver waits.
+- **Transcript** (shows whose feeds publish one): beside the player, following
+  along when it has timings; Up/Down pick a line, OK jumps there.
+- **YouTube**: 26 shows have their YouTube channel in `sources.json`. An
+  episode that is also a video has **Watch on YouTube** in the player menu
+  (opens the YouTube app at the same point and pauses here). For channels
+  that are the show's own, videos that aren't podcast episodes are listed
+  too (marked ▶ YouTube); OK opens them in YouTube.
+- Chapters and transcripts come from `extras/<episode>.json`, made by
+  `build.py` for the newest 10 episodes of each show that publishes them
+  (15 shows publish transcripts, 4 have chapters).
+- An episode counts as played within 45 s of the end.
+- The lists come from Home Assistant (`/local/roche-home/podcasts/`), written
+  by `build.py` on the HA laptop; the audio streams from each podcast's host.
+- Progress is shared with the phone through `sensor.roche_podcasts` (see
+  [tools/podcasts](../tools/podcasts/README.md#listening-progress)).
+
+**Android app** (`android/`, package `com.rochehome.podcasts`, launcher name
+Podcasts): Latest, Shows and News tabs. Episodes that are also on YouTube
+are tagged Video, with **Watch** in the player and **Watch on YouTube** on
+long-press; YouTube-only videos (▶ YouTube) open in the YouTube app. News lists articles from the 40 feeds
+in `tools/podcasts/news.json` (the papers, magazines and blogs behind the
+shows, plus Conejo Valley, Santa Barbara and Giants news; the Conejo Valley
+group is the Thousand Oaks, Moorpark and Simi Valley Acorns, KCLU, Agoura Hills
+Patch, and Google News searches for VC Star, Thousand Oaks, the Conejo Valley
+towns and Ventura County, without obituaries), by category and site; an article
+opens in the browser. Latest and Shows are filtered by category (Latest also by length),
+search (show names, and titles and descriptions of the episodes loaded),
+background and lock-screen playback with −10 s/+30 s, speed, sleep timer,
+newest/oldest and unplayed-only per show. Long-press an episode: Play next,
+Add to Up next, mark played, go to show. The player's tabs: Episode, Up next
+(the queue, kept across restarts; finished episodes drop off), Chapters and
+Transcript when the episode has them; the phone reads them from the feed
+itself, including chapters inside the MP3, so they work away from home.
+At home it reads the same lists from Home Assistant; away it reads each show's
+feed directly (opening a show, or pull down on Latest to check every feed).
+HA's address and token are built into the app from `.env`. Build and install
+with the phone plugged in:
+```sh
+cd android
+JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" ./gradlew assembleDebug
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+```
+On Android 17 it asks for **Nearby devices** (local network access), which it
+needs to reach Home Assistant.
 
 ### Home devices
 
@@ -262,6 +337,7 @@ Pluto, Tubi, …): those come from the same servers as the shows.
 - **Roche Home:** on the TV, **Apps → ⚙ → Roche Home → Delete**. Turn
   **Autorun Smart Hub** back on. Revoke its HA token.
 - **TV network:** IP and DNS back to **Obtain automatically** (table above).
+- **Podcasts:** remove the cron line on the HA laptop, delete `~/roche-podcasts` there and `$HA_WWW/roche-home/podcasts`; uninstall the phone app.
 - **Pi-hole:** see the revert steps in `../rpi/README.md`.
 - **Mac tools:** delete `~/tizen-studio`, `~/tizen-studio-data`,
   `~/.package-manager`, `~/.tizen`, `~/.tizen.sdk.path.config`,

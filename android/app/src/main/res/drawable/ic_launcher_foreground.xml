@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Same drawing as app/img/podcasts.svg, scaled into the adaptive-icon safe zone. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="1254" android:viewportHeight="1254">
+    <group android:scaleX="0.82" android:scaleY="0.82" android:pivotX="627" android:pivotY="660" android:translateY="-33">
+        <path android:pathData="M496,471 A131,131 0 0 1 758,471 V645 A131,131 0 0 1 496,645 Z" android:strokeColor="#F2F0EC" android:strokeWidth="50" />
+        <path android:pathData="M590,480 H665 M590,550 H665 M590,625 H665 M432,688 A195,165 0 0 0 822,688 M627,853 V950 M525,968 H729" android:strokeColor="#F2F0EC" android:strokeWidth="46" android:strokeLineCap="round" />
+        <path android:pathData="M370,490 Q300,588 362,690 M300,420 Q180,585 292,742 M884,490 Q954,588 892,690 M954,420 Q1074,585 962,742" android:strokeColor="#F2F0EC" android:strokeWidth="46" android:strokeLineCap="round" />
+        <path android:pathData="M604,722 a23,23 0 1,0 46,0 a23,23 0 1,0 -46,0" android:fillColor="#F0603A" />
+    </group>
+</vector>

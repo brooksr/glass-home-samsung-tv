@@ -1,0 +1,205 @@
+{
+ "_note": "News tab feeds (RSS or Atom), grouped like the podcasts. Checked 2026-11-01; dropped for 403/404/empty/stale: Marketplace, Gates Notes, Edhat, Quillette, Syntax, Coast to Coast AM, Mysterious Universe, Freakonomics, Sean Carroll. Conejo Valley: VC Star's own feeds need a subscription (402), so its headlines come from a Google News search of vcstar.com; Patch has no working Thousand Oaks feed; VC Reporter, Conejo Valley Guide, Citizens Journal and the City of Thousand Oaks have none.",
+ "feeds": [
+  {
+   "category": "Conejo Valley",
+   "name": "Thousand Oaks Acorn",
+   "url": "https://www.toacorn.com/feed"
+  },
+  {
+   "category": "Conejo Valley",
+   "name": "Ventura County Star",
+   "url": "https://news.google.com/rss/search?hl=en-US&gl=US&ceid=US:en&q=site:vcstar.com+-obituary+-obituaries+when:3d"
+  },
+  {
+   "category": "Conejo Valley",
+   "name": "KCLU",
+   "url": "https://www.kclu.org/local-news.rss"
+  },
+  {
+   "category": "Conejo Valley",
+   "name": "Moorpark Acorn",
+   "url": "https://www.mpacorn.com/feed"
+  },
+  {
+   "category": "Conejo Valley",
+   "name": "Simi Valley Acorn",
+   "url": "https://www.simivalleyacorn.com/feed"
+  },
+  {
+   "category": "Conejo Valley",
+   "name": "Agoura Hills Patch",
+   "url": "https://patch.com/feeds/aol/california/agourahills"
+  },
+  {
+   "category": "Conejo Valley",
+   "name": "Thousand Oaks (Google News)",
+   "url": "https://news.google.com/rss/search?hl=en-US&gl=US&ceid=US:en&q=%22Thousand+Oaks%22+-obituary+-obituaries+when:7d"
+  },
+  {
+   "category": "Conejo Valley",
+   "name": "Conejo Valley (Google News)",
+   "url": "https://news.google.com/rss/search?hl=en-US&gl=US&ceid=US:en&q=%22Conejo+Valley%22+OR+%22Newbury+Park%22+OR+%22Westlake+Village%22+OR+%22Agoura+Hills%22+-obituary+-obituaries+when:7d"
+  },
+  {
+   "category": "Conejo Valley",
+   "name": "Ventura County (Google News)",
+   "url": "https://news.google.com/rss/search?hl=en-US&gl=US&ceid=US:en&q=%22Ventura+County%22+-obituary+-obituaries+when:3d"
+  },
+  {
+   "category": "News & Politics",
+   "name": "New York Times",
+   "url": "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml"
+  },
+  {
+   "category": "News & Politics",
+   "name": "NYT Opinion",
+   "url": "https://rss.nytimes.com/services/xml/rss/nyt/Opinion.xml"
+  },
+  {
+   "category": "News & Politics",
+   "name": "NPR News",
+   "url": "https://feeds.npr.org/1001/rss.xml"
+  },
+  {
+   "category": "News & Politics",
+   "name": "NPR Politics",
+   "url": "https://feeds.npr.org/1014/rss.xml"
+  },
+  {
+   "category": "News & Politics",
+   "name": "Vox",
+   "url": "https://www.vox.com/rss/index.xml"
+  },
+  {
+   "category": "News & Politics",
+   "name": "The Bulwark",
+   "url": "https://www.thebulwark.com/feed"
+  },
+  {
+   "category": "News & Politics",
+   "name": "The Intercept",
+   "url": "https://theintercept.com/feed/?rss"
+  },
+  {
+   "category": "News & Politics",
+   "name": "Reason",
+   "url": "https://reason.com/feed/"
+  },
+  {
+   "category": "News & Politics",
+   "name": "The Economist",
+   "url": "https://www.economist.com/the-world-this-week/rss.xml"
+  },
+  {
+   "category": "News & Politics",
+   "name": "Crooked Media",
+   "url": "https://crooked.com/feed/"
+  },
+  {
+   "category": "News & Politics",
+   "name": "The Free Press",
+   "url": "https://www.thefp.com/feed"
+  },
+  {
+   "category": "News & Politics",
+   "name": "ABC News Politics",
+   "url": "https://abcnews.go.com/abcnews/politicsheadlines"
+  },
+  {
+   "category": "Ideas & Culture",
+   "name": "The Atlantic",
+   "url": "https://www.theatlantic.com/feed/all/"
+  },
+  {
+   "category": "Ideas & Culture",
+   "name": "99% Invisible",
+   "url": "https://99percentinvisible.org/feed/"
+  },
+  {
+   "category": "Science",
+   "name": "Quanta Magazine",
+   "url": "https://www.quantamagazine.org/feed/"
+  },
+  {
+   "category": "Science",
+   "name": "Nature",
+   "url": "https://www.nature.com/nature.rss"
+  },
+  {
+   "category": "Science",
+   "name": "Science (AAAS)",
+   "url": "https://www.science.org/rss/news_current.xml"
+  },
+  {
+   "category": "Science",
+   "name": "Skeptic",
+   "url": "https://www.skeptic.com/feed/"
+  },
+  {
+   "category": "History & Legends",
+   "name": "Smithsonian",
+   "url": "https://www.smithsonianmag.com/rss/latest_articles/"
+  },
+  {
+   "category": "Tech",
+   "name": "The Verge",
+   "url": "https://www.theverge.com/rss/index.xml"
+  },
+  {
+   "category": "Tech",
+   "name": "Ars Technica",
+   "url": "https://feeds.arstechnica.com/arstechnica/index"
+  },
+  {
+   "category": "Tech",
+   "name": "Hacker News",
+   "url": "https://hnrss.org/frontpage"
+  },
+  {
+   "category": "Tech",
+   "name": "CSS-Tricks",
+   "url": "https://css-tricks.com/feed/"
+  },
+  {
+   "category": "Mysteries & UFOs",
+   "name": "The Debrief",
+   "url": "https://thedebrief.org/feed/"
+  },
+  {
+   "category": "Mysteries & UFOs",
+   "name": "The Black Vault",
+   "url": "https://www.theblackvault.com/documentarchive/feed/"
+  },
+  {
+   "category": "Mysteries & UFOs",
+   "name": "Liberation Times",
+   "url": "https://www.liberationtimes.com/home?format=rss"
+  },
+  {
+   "category": "Giants",
+   "name": "SF Giants (MLB)",
+   "url": "https://www.mlb.com/giants/feeds/news/rss.xml"
+  },
+  {
+   "category": "Giants",
+   "name": "McCovey Chronicles",
+   "url": "https://www.mccoveychronicles.com/rss/index.xml"
+  },
+  {
+   "category": "Santa Barbara",
+   "name": "Santa Barbara Independent",
+   "url": "https://www.independent.com/feed/"
+  },
+  {
+   "category": "Santa Barbara",
+   "name": "Noozhawk",
+   "url": "https://www.noozhawk.com/feed/"
+  },
+  {
+   "category": "Comedy & Entertainment",
+   "name": "ScreenCrush",
+   "url": "https://screencrush.com/feed/"
+  }
+ ]
+}

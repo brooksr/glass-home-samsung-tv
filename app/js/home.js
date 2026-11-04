@@ -105,6 +105,38 @@
     toastTimer = setTimeout(function () { t.classList.remove('on'); }, ms || 3200);
   }
 
+  // ---------- GameShelf phones on this TV ----------
+  // The GameShelf tile lists each phone once per way it can reach this TV; choosing one asks
+  // that phone to open the matching mirroring screen.
+  var CAST_WAYS = {
+    smartview: { label: 'Smart View', pick: 'this TV',
+      data: { intent_action: 'com.gameshelf.app.PLAY_ON_TV', intent_package_name: 'com.gameshelf.app', intent_extras: 'via:smartview' } },
+    chromecast: { label: 'Chromecast', pick: 'Chromecast Ultra, then Cast my screen,',
+      data: { intent_action: 'com.gameshelf.app.PLAY_ON_TV', intent_package_name: 'com.gameshelf.app', intent_extras: 'via:chromecast' } },
+    cast: { label: 'Chromecast', pick: 'the Chromecast',
+      data: { intent_action: 'android.settings.CAST_SETTINGS' } }
+  };
+
+  function pickPhone() {
+    var list = [];
+    cfg.gameshelfPhones.forEach(function (ph) {
+      (ph.ways || ['smartview']).forEach(function (w) {
+        var way = CAST_WAYS[w];
+        if (way) list.push({ label: ph.name + ' (' + way.label + ')', run: function () { castPhone(ph, way); } });
+      });
+    });
+    showMenu('Play a phone on TV', list.concat([{ label: 'Cancel', run: function () {} }]));
+  }
+
+  function castPhone(ph, way) {
+    if (cfg.preview) { toast('Preview: would ask the ' + ph.name + ' to open ' + way.label); return; }
+    toast('Asking the ' + ph.name + '…');
+    GH.ha.call('notify', ph.notify, { message: 'command_activity', data: way.data }, function (ok) {
+      toast(ok ? 'On the ' + ph.name + ', tap ' + way.pick + ' to start mirroring'
+        : 'Couldn\'t reach the ' + ph.name + '. Is its Home Assistant app signed in?', 6000);
+    });
+  }
+
   // ---------- clock: "3:45 pm" and "Tuesday 21 October" ----------
   var timeFmt = null;
   var dateFmt = null;
@@ -151,7 +183,9 @@
     if (GH.babyLog) list.push({ kind: 'baby', key: 'baby', label: 'BabySteps', icon: 'img/babysteps.png' });
     if (GH.panels) list.push({ kind: 'weather', key: 'weather', label: 'Weather' });
     if (GH.library) list.push({ kind: 'library', key: 'library', label: 'Library', icon: 'img/library.svg' });
+    if (GH.podcasts) list.push({ kind: 'podcasts', key: 'podcasts', label: 'Podcasts', icon: 'img/podcasts.svg' });
     if (GH.devices) list.push({ kind: 'home', key: 'home', label: 'Home', icon: 'img/home.svg' });
+    if (GH.ha && (cfg.gameshelfPhones || []).length) list.push({ kind: 'cast', key: 'cast', label: 'GameShelf', icon: 'img/gameshelf.png' });
     orderedAppKeys().forEach(function (k) {
       var a = apps[k];
       if (!a || hidden.indexOf(k) >= 0) return;
@@ -250,7 +284,7 @@
     var face = div('face');
     el.appendChild(face);
     var img;
-    if (it.kind === 'app' || it.kind === 'baby' || it.kind === 'library' || it.kind === 'home') {
+    if (it.kind === 'app' || it.kind === 'baby' || it.kind === 'library' || it.kind === 'podcasts' || it.kind === 'home' || it.kind === 'cast') {
       if (it.icon) {
         img = new Image();
         img.className = 'app-icon';
@@ -400,7 +434,9 @@
     if (it.kind === 'baby') { GH.babyLog.open(); return; }
     if (it.kind === 'weather' || it.kind === 'monitor') { GH.panels.open(it.kind); return; }
     if (it.kind === 'library') { GH.library.open(); return; }
+    if (it.kind === 'podcasts') { GH.podcasts.open(); return; }
     if (it.kind === 'home') { GH.devices.open(); return; }
+    if (it.kind === 'cast') { pickPhone(); return; }
     var p;
     // Drop the photo and dock layers before the app starts: on a 2018 TV
     // Netflix and Prime Video fail to start while they hold graphics memory.
@@ -436,21 +472,26 @@
 
   function openMenu() {
     var it = items[focus];
-    if (!it || it.kind === 'add' || it.kind === 'baby' || it.kind === 'weather' || it.kind === 'monitor' || it.kind === 'library' || it.kind === 'home') return;
+    if (!it || it.kind === 'add' || it.kind === 'baby' || it.kind === 'weather' || it.kind === 'monitor' || it.kind === 'library' || it.kind === 'podcasts' || it.kind === 'home' || it.kind === 'cast') return;
     var group = groupOf(it);
     var gi = group.indexOf(it);
-    menuItems = [
+    showMenu(it.label, [
       { label: 'Move left', disabled: gi <= 0, run: function () { moveItem(it, -1); } },
       { label: 'Move right', disabled: gi >= group.length - 1, run: function () { moveItem(it, 1); } },
       it.kind === 'app'
         ? { label: 'Hide', run: function () { hideApp(it); } }
         : { label: 'Remove', run: function () { removeShortcut(it); } },
       { label: 'Cancel', run: function () {} }
-    ];
+    ]);
+  }
+
+  // A small list above the focused tile: ▲ ▼ to choose, OK to run, Back to close.
+  function showMenu(title, list) {
+    menuItems = list;
     menuFocus = 0;
     while (menuItems[menuFocus].disabled) menuFocus += 1;
     menu.textContent = '';
-    menu.appendChild(div('menu-title', it.label));
+    menu.appendChild(div('menu-title', title));
     menuItems.forEach(function (m) {
       var e = div('menu-item' + (m.disabled ? ' disabled' : ''), m.label);
       m.el = e;
@@ -741,13 +782,15 @@
         };
       }).filter(Boolean);
     }
-    return GH.request('GET', 'wallpapers/manifest.json', undefined, 4000).then(function (r) {
-      var list = parse(r, 'wallpapers/');
-      if (list && list.length) return list;
-      return GH.request('GET', '/preview-assets/manifest.json', undefined, 3000).then(function (r2) {
+    // Roche Home ships no photos of its own (the TV is short of space): they all
+    // come from the Pi, and without them the stage's dark gradient shows.
+    // The desktop preview can still use /preview-assets/.
+    var local = cfg.preview
+      ? GH.request('GET', '/preview-assets/manifest.json', undefined, 3000).then(function (r2) {
         return parse(r2, '/preview-assets/') || [];
-      });
-    }).then(function (list) {
+      }, function () { return []; })
+      : Promise.resolve([]);
+    return local.then(function (list) {
       bundled = list;
       // Photos kept off the TV (it is short of space), e.g. in Home Assistant's
       // /config/www, which HA serves without sign-in at /local/.
@@ -756,7 +799,7 @@
       return GH.request('GET', remote, undefined, 6000).then(function (r) {
         var more = parse(r, remote.replace(/[^\/]*$/, ''));
         if (more && more.length) bundled = bundled.concat(more);
-      }, function () { /* the built-in photos still work */ });
+      }, function () { /* no photos: the gradient shows */ });
     });
   }
 

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1254 1254">
+  <!-- Podcasts icon: microphone and sound waves (also android/…/drawable/logo.xml). -->
+  <rect width="1254" height="1254" fill="#1A1D29"/>
+  <g fill="none" stroke="#F2F0EC" stroke-linecap="round">
+    <rect x="496" y="340" width="262" height="436" rx="131" stroke-width="50"/>
+    <path d="M590 480H665M590 550H665M590 625H665" stroke-width="46"/>
+    <path d="M432 688A195 165 0 0 0 822 688M627 853V950M525 968H729" stroke-width="46"/>
+    <path d="M370 490Q300 588 362 690M300 420Q180 585 292 742M884 490Q954 588 892 690M954 420Q1074 585 962 742" stroke-width="46"/>
+  </g>
+  <circle cx="627" cy="722" r="23" fill="#F0603A"/>
+</svg>

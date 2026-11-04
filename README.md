@@ -40,7 +40,7 @@ News, PBS, PBS KIDS, Universal Guide, Internet) and Monitor last.
 | ![Library](docs/screenshots/roche-home/library.jpg) | **Library.** Public-domain movies, TV, kids' cartoons, LibriVox audiobooks and Gutenberg books. Video and audio stream from the Internet Archive; books can be read aloud. Your place is saved. |
 | ![Home devices](docs/screenshots/roche-home/devices.jpg) | **Home.** Every controllable Home Assistant device by room: scenes, the Chromecast, speakers, the nursery's white noise machine. New HA devices appear by themselves. |
 | ![Logging for BabySteps](docs/screenshots/roche-home/babylog.jpg) | **BabySteps.** Log a feed, pump, diaper, tummy time, bath or sleep from the remote; the TV shows BabySteps' own confirmation. |
-| ![Monitor](docs/screenshots/roche-home/monitor.jpg) | **Monitor.** Health of the TV, the Raspberry Pi (Home Assistant, CPU, temperature, memory, disk, Pi-hole) and the internet connection. The tile shows a green, amber or red dot for each. |
+| ![Monitor](docs/screenshots/roche-home/monitor.jpg) | **Monitor.** Health of the TV, the laptop running Home Assistant (CPU, temperature, memory, disk, battery), the Raspberry Pi (CPU, temperature, memory, disk, Pi-hole) and the internet connection. The tile shows a green, amber or red dot for each. |
 
 ## Using it with the remote
 
@@ -61,7 +61,7 @@ After 3 minutes idle only the photos show; the first press just wakes it.
 
 You need the Mac tools from [docs/INSTALL.md](docs/INSTALL.md) steps 2 and 3
 (`~/tizen-studio` and the certificate tool), the `GlassHome` certificate
-profile, and the Raspberry Pi running Home Assistant with the sensors listed
+profile, and Home Assistant (on the laptop since October 2026) with the sensors listed
 in [docs/ROCHE-HOME.md](docs/ROCHE-HOME.md).
 
 1. **This home's settings.** `cp .env.example .env` and fill it in: the

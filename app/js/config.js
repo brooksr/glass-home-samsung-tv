@@ -88,6 +88,20 @@
       refreshMs: 60 * 1000
     },
 
+    // GameShelf phones that can mirror to this TV, listed by the GameShelf tile (after Home).
+    // Choosing one sends the phone's Home Assistant app a command (HA's command_activity) that
+    // opens its mirroring screen; picking the TV there starts mirroring, which can only start on
+    // the phone. `notify` is the phone's notify.mobile_app_* action, created when its HA app signs
+    // in. The Galaxies offer Smart View (straight to this TV) and Chromecast (Google Home's "Cast
+    // my screen" to the Chromecast Ultra on HDMI), through GameShelf's Play on TV. The OnePlus has
+    // no Smart View: Android's Cast screen, to the Chromecast.
+    gameshelfPhones: [
+      { name: 'S20 FE', notify: 'mobile_app_sm_g781u', ways: ['smartview', 'chromecast'] },
+      { name: 'A54', notify: 'mobile_app_sm_a546u', ways: ['smartview', 'chromecast'] },
+      { name: 'A51', notify: 'mobile_app_sm_a516u', ways: ['smartview', 'chromecast'] },
+      { name: 'OnePlus', notify: 'mobile_app_oneplus_a5010', ways: ['cast'] }
+    ],
+
     // Banners and "Up next" from Home Assistant (js/alerts.js); the entities
     // come from ../rpi (scripts/local-map). Needs homeAssistant above.
     alerts: {
@@ -99,6 +113,7 @@
         quake: 'sensor.earthquakes',
         air: 'sensor.local_air_quality',
         weather: 'sensor.local_weather_alerts',
+        cooling: 'binary_sensor.cooler_air_outside',
         power: env.powerShutoff,
         launch: env.launches,
         household: 'sensor.household_schedule'
@@ -110,6 +125,16 @@
     // tools/library/build.py and served from the Pi.
     library: {
       base: haLocal && haLocal + 'library/'
+    },
+
+    // Podcasts (js/podcasts.js): the feeds are read every 30 minutes on the
+    // Home Assistant laptop by tools/podcasts/build.py. Listening progress is
+    // shared with the Android app (android/) through syncEntity.
+    podcasts: {
+      base: haLocal && haLocal + 'podcasts/',
+      syncEntity: 'sensor.roche_podcasts',
+      // What the Android app casts to the TV (its Play on TV button).
+      castEntity: 'sensor.roche_podcasts_cast'
     },
 
     // Home tile (js/devices.js): Home Assistant's devices by room. `exclude`

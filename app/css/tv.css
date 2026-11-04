@@ -854,6 +854,8 @@ html.ambient #banners { opacity: 1; }      /* alerts stay up during the screensa
   background: #ffb224;
 }
 .banner.red .banner-dot { background: #e5484d; }
+.banner.info { background: rgba(16, 38, 60, 0.80); box-shadow: inset 0 0 0 2px rgba(116, 194, 255, 0.85), 0 16px 40px rgba(0, 0, 0, 0.30); }
+.banner.info .banner-dot { background: #74c2ff; }
 .banner-title { font-weight: 700; margin-right: 14px; white-space: nowrap; }
 .banner-detail { color: rgba(255, 255, 255, 0.72); font-size: 23px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
@@ -936,10 +938,10 @@ html.ambient #banners { opacity: 1; }      /* alerts stay up during the screensa
   justify-content: center;
   background: rgba(30, 60, 90, 0.55);
 }
-.tile-monitor .face { background: rgba(28, 32, 38, 0.70); align-items: flex-start; padding-left: 26%; }
+.tile-monitor .face { background: rgba(28, 32, 38, 0.70); align-items: flex-start; padding-left: 17%; }
 .tile-wx-icon { width: 46%; height: 46%; }
 .tile-wx-temp { margin-top: 2px; font-size: 34px; font-weight: 600; }
-.tile-mon-row { display: flex; align-items: center; font-size: 22px; font-weight: 600; line-height: 1.5; }
+.tile-mon-row { display: flex; align-items: center; font-size: 21px; font-weight: 600; line-height: 1.35; }
 .tile-mon-row .dot { margin-right: 10px; }
 .dot { display: inline-block; flex: none; width: 18px; height: 18px; border-radius: 50%; background: rgba(255, 255, 255, 0.3); }
 .dot.small { width: 13px; height: 13px; }
@@ -1000,17 +1002,17 @@ html.ambient #banners { opacity: 1; }      /* alerts stay up during the screensa
 .sh-dots span { display: block; width: 12px; height: 12px; margin: 10px 0; border-radius: 50%; background: rgba(255, 255, 255, 0.25); }
 .sh-dots span.on { background: #fff; }
 .mon-cols { display: flex; margin-top: 40px; }
-.mon-col { flex: 1; padding: 30px 28px; border-radius: 30px; background: rgba(255, 255, 255, 0.05); }
-.mon-col + .mon-col { margin-left: 26px; }
+.mon-col { flex: 1; min-width: 0; padding: 28px 24px; border-radius: 30px; background: rgba(255, 255, 255, 0.05); }
+.mon-col + .mon-col { margin-left: 20px; }
 .mon-head { display: flex; align-items: center; margin-bottom: 22px; font-size: 34px; font-weight: 600; }
 .mon-head .dot { margin-right: 16px; }
-.mon-row { display: flex; align-items: baseline; padding: 11px 0; border-top: 1px solid rgba(255, 255, 255, 0.07); font-size: 23px; }
+.mon-row { display: flex; align-items: baseline; padding: 10px 0; border-top: 1px solid rgba(255, 255, 255, 0.07); font-size: 21px; }
 .mon-row .dot { margin-right: 14px; position: relative; top: 1px; }
-.mon-name { width: 165px; flex: none; color: rgba(255, 255, 255, 0.6); }
+.mon-name { width: 128px; flex: none; color: rgba(255, 255, 255, 0.6); }
 .mon-val { font-weight: 600; }
 
 /* ---------- Library (js/library.js) ---------- */
-#library {
+#library, #podcasts {
   position: absolute;
   top: 0;
   right: 0;
@@ -1020,7 +1022,7 @@ html.ambient #banners { opacity: 1; }      /* alerts stay up during the screensa
   background: #0d0f14;
   overflow: hidden;
 }
-#library.open { display: block; }
+#library.open, #podcasts.open { display: block; }
 /* Video: nothing else drawn behind it. */
 html.lib-playing #bg, html.lib-playing #dock, html.lib-playing #ha, html.lib-playing #clock,
 html.lib-playing #banners, html.lib-playing #night-shade { display: none; }
@@ -1066,7 +1068,7 @@ html.lib-playing #banners, html.lib-playing #night-shade { display: none; }
 .lib-video { position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: #000; }
 .lib-video .lib-media { width: 100%; height: 100%; }
 .lib-audio { position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: linear-gradient(to top, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.35)); }
-#library.open .lib-audio { background-color: transparent; }
+#library.open .lib-audio, #podcasts.open .lib-audio { background-color: transparent; }
 .lib-audio-art { position: absolute; left: 50%; top: 150px; width: 420px; height: 420px; margin-left: -210px; border-radius: 30px; overflow: hidden; background: #1a1d24; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5); }
 .lib-audio-art img { width: 100%; height: 100%; object-fit: contain; }
 .lib-hud { position: absolute; left: 0; right: 0; bottom: 0; padding: 60px 100px 50px; background: linear-gradient(to top, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0)); opacity: 0; transition: opacity 0.4s ease; }
@@ -1118,3 +1120,44 @@ html.lib-playing #banners, html.lib-playing #night-shade { display: none; }
 .dv-bar { margin-top: 30px; height: 16px; border-radius: 8px; background: rgba(255, 255, 255, 0.15); }
 .dv-fill { height: 100%; border-radius: 8px; background: #ffc450; }
 .dv-pop-keys { margin-top: 30px; font-size: 22px; color: rgba(255, 255, 255, 0.5); }
+
+/* ---------- Podcasts (js/podcasts.js): the Library's styles, square art ---------- */
+/* Heading 34 + gap 26 + art 260 + title (2 lines) and subtitle ~100 + space. */
+#podcasts .lib-rows { top: 170px; }
+/* Rows scroll under an opaque header band (logo, focused item's details). */
+#podcasts .lib-browse:before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 160px; z-index: 1;
+  background: linear-gradient(to bottom, #0d0f14 85%, rgba(13, 15, 20, 0)); }
+#podcasts .lib-title, #podcasts .lib-info { position: relative; z-index: 2; }
+#podcasts .lib-info { position: absolute; }
+.pod-row { height: 480px; }
+.pod-row.pod-gridrow { height: 420px; }
+.pod-row .lib-strip { margin-top: 26px; }
+.pod-gridrow .lib-strip { margin-top: 0; }
+.pod-card { width: 260px; }
+.pod-art { width: 260px; height: 260px; }
+.pod-art img { object-fit: cover; }
+.pod-name { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.25; max-height: 56px; }
+.pod-sub { margin-top: 4px; font-size: 18px; color: rgba(255, 255, 255, 0.45); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pod-detail-art { width: 420px; height: 420px; }
+.pod-desc { max-height: 96px; font-size: 22px; line-height: 32px; }   /* exactly 3 lines */
+.lib-item.pod-played .lib-item-label { color: rgba(255, 255, 255, 0.45); }
+.lib-item.pod-played.focused .lib-item-label { color: rgba(0, 0, 0, 0.55); }
+.pod-title img { display: block; width: 76px; height: 76px; border-radius: 18px; }
+.lib-item.pod-setting .lib-item-label { color: rgba(255, 255, 255, 0.6); font-size: 24px; }
+.lib-item.pod-setting.focused .lib-item-label { color: #0c0c0e; }
+/* Player menu: speed, sleep timer, transcript, chapters */
+.pod-menu { display: none; position: absolute; top: 80px; right: 90px; width: 560px; padding: 18px 40px; border-radius: 28px; background: rgba(16, 18, 26, 0.94); box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5); }
+.pod-menu.on { display: block; }
+.lib-item.pod-current .lib-item-label { color: #f0603a; }
+.lib-item.pod-current.focused .lib-item-label { color: #c2401c; }
+/* Transcript beside the player */
+.pod-tr { display: none; }
+.lib-audio.pod-with-tr .lib-audio-art { left: 100px; top: 90px; width: 300px; height: 300px; margin-left: 0; }
+.lib-audio.pod-with-tr .pod-tr { display: block; position: absolute; top: 80px; left: 460px; right: 100px; height: 600px; overflow: hidden; padding: 10px 30px; border-radius: 24px; background: rgba(10, 12, 18, 0.82); }
+.pod-line { margin: 0 -14px 14px; padding: 8px 14px; border-radius: 14px; font-size: 30px; line-height: 1.45; color: rgba(255, 255, 255, 0.55); }
+.pod-line.now { color: #fff; }
+.pod-line.picked { background: rgba(255, 255, 255, 0.14); color: #fff; }
+.pod-speaker { font-size: 20px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #f0603a; margin-bottom: 2px; }
+/* Fade the transcript's last visible line rather than cutting it. */
+.lib-audio.pod-with-tr .pod-tr:after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 90px;
+  border-radius: 0 0 24px 24px; background: linear-gradient(to bottom, rgba(10, 12, 18, 0), rgba(10, 12, 18, 0.95)); }

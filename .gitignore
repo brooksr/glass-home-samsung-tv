@@ -29,3 +29,8 @@ state/
 __pycache__/
 node_modules/
 .DS_Store
+
+# Audiobook read-along text and the Gutenberg books it's made from
+# (tools/audiobooks/texts.py rebuilds both; ~45 MB of public-domain text)
+tools/audiobooks/texts/
+tools/audiobooks/.cache/

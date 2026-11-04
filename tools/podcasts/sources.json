@@ -1,0 +1,1019 @@
+{
+ "_note": "Built from export.txt with Apple's podcast search; edit by hand. id = Apple's collection ID (or any unique text); category groups the Shows grid. youtube: the show's YouTube channel; 'only' also lists videos that aren't podcast episodes (for channels that are the show's own).",
+ "shows": [
+  {
+   "id": "394775318",
+   "title": "99% Invisible",
+   "author": "Roman Mars",
+   "feed": "https://feeds.simplecast.com/BqbsxVfO",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/79/d0/35/79d035ea-9043-b43e-7380-33cd47bd968b/mza_2606971010425550919.jpg/600x600bb.jpg",
+   "category": "Ideas & Culture"
+  },
+  {
+   "id": "1611666380",
+   "title": "The Adam Ragusea Podcast",
+   "author": "Adam Ragusea",
+   "feed": "https://feeds.megaphone.fm/adamraguseapodcast",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/db/eb/32/dbeb32e5-4b47-1bf8-b3c3-492f43916b85/mza_1862657419090617216.jpg/600x600bb.jpg",
+   "category": "Ideas & Culture",
+   "youtube": {
+    "channel": "UC9_p50tH3WmMslWRWKnM7dQ",
+    "handle": "@aragusea",
+    "only": true
+   }
+  },
+  {
+   "id": "1462195742",
+   "title": "The Al Franken Podcast",
+   "author": "The Al Franken Podcast",
+   "feed": "https://audioboom.com/channels/5155312.rss",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/b1/f2/e6/b1f2e698-679e-583a-4ed5-08b88a5be984/mza_15810237993770951023.jpg/600x600bb.jpg",
+   "category": "News & Politics"
+  },
+  {
+   "id": "1314170606",
+   "title": "All In with Chris Hayes",
+   "author": "MS NOW, Chris Hayes",
+   "feed": "https://feeds.simplecast.com/K5Wu8vub",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/67/4c/4a/674c4abe-4d43-c67c-b70e-fff1795ba447/mza_7592879859283148412.jpg/600x600bb.jpg",
+   "category": "News & Politics"
+  },
+  {
+   "id": "1435516849",
+   "title": "American Scandal",
+   "author": "Audible Original",
+   "feed": "https://rss.art19.com/american-scandal",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/f7/91/9a/f7919a02-8948-7812-3c35-4c78ceea4815/mza_17740823854183495101.jpeg/600x600bb.jpg",
+   "category": "History & Legends"
+  },
+  {
+   "id": "1724258920",
+   "title": "AREA52 Podcast With Chris Ramsay",
+   "author": "Chris Ramsay",
+   "feed": "https://feeds.megaphone.fm/CYSRR7375513505",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/4d/eb/9a/4deb9abb-c66d-9642-4549-a91d89d2da09/mza_2044703025550835520.jpg/600x600bb.jpg",
+   "category": "Mysteries & UFOs"
+  },
+  {
+   "id": "923527373",
+   "title": "Astonishing Legends",
+   "author": "Astonishing Legends Productions",
+   "feed": "https://audioboom.com/channels/4322549.rss",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts126/v4/ad/76/bc/ad76bc47-5cc2-3a33-3831-eb131d4056ed/mza_6281920426640935874.jpg/600x600bb.jpg",
+   "category": "History & Legends",
+   "youtube": {
+    "channel": "UC7N_0ZKpUTyVTNSvjH6JrnA",
+    "handle": "@AstonishingLegends",
+    "only": true
+   }
+  },
+  {
+   "id": "1502150789",
+   "title": "At This Moment with Jim Jefferies & Amos Gill",
+   "author": "Jim Jefferies and Amos Gill",
+   "feed": "https://rss.art19.com/at-this-moment",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/4b/36/5f/4b365fd8-f8c3-6307-4d96-c90d0f516560/mza_16579884273929044886.jpeg/600x600bb.jpg",
+   "category": "Comedy & Entertainment"
+  },
+  {
+   "id": "1333559272",
+   "title": "Belief Hole | Paranormal, Mysteries and Other Tasty Thought Snacks",
+   "author": "SpectreVision Radio",
+   "feed": "https://feeds.megaphone.fm/PHTE6806016784",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/36/d1/a1/36d1a1c0-6901-e775-f263-553229014750/mza_11260057747399637212.jpg/600x600bb.jpg",
+   "category": "Mysteries & UFOs"
+  },
+  {
+   "id": "1206175991",
+   "title": "The Best of Coast to Coast AM",
+   "author": "iHeartPodcasts and Coast to Coast AM",
+   "feed": "https://www.omnycontent.com/d/playlist/e73c998e-6e60-432f-8610-ae210140c5b1/61c1535a-56bb-431a-ad6b-ae2b00350f5c/b95f0c24-c199-4939-b52c-ae2b00350f65/podcast.rss",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts126/v4/2c/86/4e/2c864e7c-beb9-8088-b0cf-919131a8bec2/mza_11913273163357553802.jpg/600x600bb.jpg",
+   "category": "Mysteries & UFOs"
+  },
+  {
+   "id": "1538630420",
+   "title": "Bill Gates and Rashida Jones Ask Big Questions",
+   "author": "Gates Notes",
+   "feed": "https://feeds.feedburner.com/BillGatesAndRashidaJonesAskBigQuestions",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts125/v4/53/bf/03/53bf03cb-c5dd-02fd-b912-67a32690220a/mza_15021001065448786552.jpg/600x600bb.jpg",
+   "category": "Ideas & Culture"
+  },
+  {
+   "id": "1407064117",
+   "title": "The Black Vault Radio w/ John Greenewald, Jr.",
+   "author": "John Greenewald, Jr.",
+   "feed": "https://www.theblackvault.com/documentarchive/feed/podcast/the-black-vault-radio-w-john-greenewald-jr/",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/dc/d9/3d/dcd93d4f-ce86-4bbb-ecd8-84a0bc17ce09/mza_18104946250443516629.jpg/600x600bb.jpg",
+   "category": "Mysteries & UFOs",
+   "youtube": {
+    "channel": "UCLa5HCVNTiOzGqLZf88n8hw",
+    "handle": "@TheBlackVault",
+    "only": true
+   }
+  },
+  {
+   "id": "1122333284",
+   "title": "Blamo!",
+   "author": "Blamo! Media, Jeremy Kirkland",
+   "feed": "https://feeds.simplecast.com/_J_JkqSe",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/d3/3a/02/d33a027e-7fbd-3359-fa57-f49d30cb7509/mza_16200262500069335363.jpg/600x600bb.jpg",
+   "category": "Comedy & Entertainment"
+  },
+  {
+   "id": "561510696",
+   "title": "Blurry Photos",
+   "author": "David Flora",
+   "feed": "https://www.spreaker.com/show/5857485/episodes/feed",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/cb/cd/6c/cbcd6c83-6214-8558-fa5c-97965de17403/mza_13834775370794519037.jpg/600x600bb.jpg",
+   "category": "Mysteries & UFOs"
+  },
+  {
+   "id": "1447684472",
+   "title": "The Bulwark Daily",
+   "author": "The Bulwark",
+   "feed": "https://audioboom.com/channels/5114286.rss",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/93/4f/85/934f8542-7a14-cf77-7d0e-63604579de3c/mza_4576536635025194283.jpg/600x600bb.jpg",
+   "category": "News & Politics",
+   "youtube": {
+    "channel": "UCebRn18ZC2XhaIw6lENBQYw",
+    "handle": "@TheBulwark",
+    "only": true
+   }
+  },
+  {
+   "id": "1258545975",
+   "title": "Citations Needed",
+   "author": "Nima Shirazi and Adam Johnson",
+   "feed": "https://rss.libsyn.com/shows/102225/destinations/542191.xml",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts113/v4/f5/fe/97/f5fe9719-79ee-a535-aaca-7971838da991/mza_1363425183235475554.png/600x600bb.jpg",
+   "category": "News & Politics"
+  },
+  {
+   "id": "316045799",
+   "title": "Comedy Bang Bang: The Podcast",
+   "author": "Earwolf and Scott Aukerman",
+   "feed": "https://feeds.simplecast.com/byb4nhvN",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/0b/ca/6e/0bca6ee0-0b2b-5df7-edee-4d9d1b2d4e8a/mza_10749952114435066299.jpg/600x600bb.jpg",
+   "category": "Comedy & Entertainment"
+  },
+  {
+   "id": "1438054347",
+   "title": "Conan O’Brien Needs A Friend",
+   "author": "Team Coco & Earwolf",
+   "feed": "https://feeds.simplecast.com/dHoohVNH",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/c6/02/8a/c6028ab7-bffd-db83-53e4-34a4ea9bef21/mza_16944101310108746053.jpg/600x600bb.jpg",
+   "category": "Comedy & Entertainment",
+   "youtube": {
+    "channel": "UCi7GJNg51C3jgmYTUwqoUXA",
+    "handle": "@TeamCoco",
+    "only": false
+   }
+  },
+  {
+   "id": "1716338488",
+   "title": "Conversations with Coleman",
+   "author": "The Free Press",
+   "feed": "https://feeds.megaphone.fm/RUNMED8938522838",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/87/d5/96/87d596dc-7f68-81b5-833e-1c5e4fe62d6a/mza_6193746656898525004.jpg/600x600bb.jpg",
+   "category": "Ideas & Culture",
+   "youtube": {
+    "channel": "UCUk0AvSMU5CJ0wUqJf9TX8g",
+    "handle": "@ColemanHughesOfficial",
+    "only": true
+   }
+  },
+  {
+   "id": "1200361736",
+   "title": "The Daily",
+   "author": "The New York Times",
+   "feed": "https://feeds.simplecast.com/Sl5CSM3S",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/ab/64/66/ab6466a9-9a7d-e20e-7a3d-bc5be37d29ce/mza_15084852813176276273.jpg/600x600bb.jpg",
+   "category": "News & Politics"
+  },
+  {
+   "id": "173001861",
+   "title": "Dan Carlin's Hardcore History",
+   "author": "Dan Carlin",
+   "feed": "https://feeds.feedburner.com/dancarlin/history?format=xml",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts115/v4/49/b7/eb/49b7eb32-8f08-6fac-aadb-2f002131fe5f/mza_15196161972010256532.jpg/600x600bb.jpg",
+   "category": "History & Legends"
+  },
+  {
+   "id": "402050558",
+   "title": "The David Pakman Show",
+   "author": "David Pakman",
+   "feed": "https://feeds.megaphone.fm/SHHWD4599743349",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/69/55/ba/6955ba9b-bb18-f834-88ff-23f074ab44ff/mza_102414667069556676.jpg/600x600bb.jpg",
+   "category": "News & Politics",
+   "youtube": {
+    "channel": "UCvixJtaXuNdMPUGdOPcY8Ag",
+    "handle": "@thedavidpakmanshow",
+    "only": true
+   }
+  },
+  {
+   "id": "1531266667",
+   "title": "Decoding the Gurus",
+   "author": "Christopher Kavanagh and Matthew Browne",
+   "feed": "https://feeds.captivate.fm/decoding-the-gurus/",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts124/v4/01/e6/7b/01e67bd6-da23-5b2e-d89b-6716d7d826bd/mza_7402017076637892155.jpg/600x600bb.jpg",
+   "category": "Ideas & Culture",
+   "id3chapters": true,
+   "youtube": {
+    "channel": "UCTgFfqo5o8yIdvMbwOFZyYA",
+    "handle": "@DecodingTheGurus",
+    "only": true
+   }
+  },
+  {
+   "id": "1595803887",
+   "title": "Decoding The Unknown",
+   "author": "Cloud10",
+   "feed": "https://feeds.megaphone.fm/CTL7768873649",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/75/a1/41/75a14192-c70a-7f4e-87fd-6d50b614ed4f/mza_4621128179952089056.jpg/600x600bb.jpg",
+   "category": "Mysteries & UFOs"
+  },
+  {
+   "id": "1354611827",
+   "title": "Deconstructed",
+   "author": "The Intercept",
+   "feed": "https://feeds.acast.com/public/shows/1d1223a2-9d05-473b-9e79-c2b65b71d676",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts116/v4/67/af/09/67af090d-fda6-bfa0-9350-4b554e50cd81/mza_7898666971423237670.png/600x600bb.jpg",
+   "category": "News & Politics"
+  },
+  {
+   "id": "1317493077",
+   "title": "Duolingo Spanish Podcast",
+   "author": "Duolingo",
+   "feed": "https://anchor.fm/s/fc714074/podcast/rss",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts115/v4/aa/a0/f5/aaa0f562-64a8-401f-bfe8-7b6a49ec5943/mza_2619062143639023486.png/600x600bb.jpg",
+   "category": "Learning"
+  },
+  {
+   "id": "843060147",
+   "title": "Earth Ancients",
+   "author": "Cliff Dunning",
+   "feed": "https://www.spreaker.com/show/2790919/episodes/feed",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts115/v4/ff/18/86/ff1886b9-1031-9b5d-0305-42f9b4bd9de0/mza_17490864675781405792.jpg/600x600bb.jpg",
+   "category": "Mysteries & UFOs"
+  },
+  {
+   "id": "1042433083",
+   "title": "Explain It to Me",
+   "author": "Vox",
+   "feed": "https://feeds.megaphone.fm/theweeds",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/71/cf/c5/71cfc533-e175-a140-ba2d-7d512fcf7537/mza_14958106228441648440.jpeg/600x600bb.jpg",
+   "category": "Ideas & Culture"
+  },
+  {
+   "id": "1548604447",
+   "title": "The Ezra Klein Show",
+   "author": "New York Times Opinion",
+   "feed": "https://feeds.simplecast.com/kEKXbjuJ",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/9d/ca/35/9dca35d8-e7d2-7e4f-63b5-c2ff4973a3f5/mza_16891544429738729361.jpg/600x600bb.jpg",
+   "category": "Ideas & Culture"
+  },
+  {
+   "id": "1077418457",
+   "title": "FiveThirtyEight Politics",
+   "author": "ABC News, 538, FiveThirtyEight, Galen Druke",
+   "feed": "https://feeds.megaphone.fm/ESP8794877317",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts122/v4/93/89/72/938972a7-1617-17bb-d17f-bc66e05dcac3/mza_14995130231529733454.jpg/600x600bb.jpg",
+   "category": "News & Politics"
+  },
+  {
+   "id": "818198322",
+   "title": "FoundMyFitness",
+   "author": "Rhonda Patrick, Ph.D.",
+   "feed": "https://rss.libsyn.com/shows/51714/destinations/184296.xml",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/89/9a/d4/899ad444-4dc0-7a0c-e244-ed8f869d4f09/mza_4758067400065032137.jpg/600x600bb.jpg",
+   "category": "Science",
+   "youtube": {
+    "channel": "UCWF8SqJVNlx-ctXbLswcTcA",
+    "handle": "@FoundMyFitness",
+    "only": true
+   }
+  },
+  {
+   "id": "354668519",
+   "title": "Freakonomics Radio",
+   "author": "Freakonomics Radio + Stitcher",
+   "feed": "https://feeds.simplecast.com/Y8lFbOT4",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts115/v4/f7/0c/c5/f70cc540-ce36-d96f-b111-c970aad5505c/mza_17703422762227531425.jpg/600x600bb.jpg",
+   "category": "Ideas & Culture"
+  },
+  {
+   "id": "214089682",
+   "title": "Fresh Air",
+   "author": "NPR",
+   "feed": "https://feeds.npr.org/381444908/podcast.xml",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/68/35/32/683532c0-dd91-676a-eeef-3ace951cd6e9/mza_6896198885971355473.jpg/600x600bb.jpg",
+   "category": "Ideas & Culture"
+  },
+  {
+   "id": "1438157174",
+   "title": "Future Perfect",
+   "author": "Vox",
+   "feed": "https://feeds.megaphone.fm/futureperfect",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/96/c7/d9/96c7d9dc-f3f4-ff32-bbbe-fa2c387ea54d/mza_169165132411790542.jpg/600x600bb.jpg",
+   "category": "Ideas & Culture"
+  },
+  {
+   "id": "1566636928",
+   "title": "Gates McFadden Investigates: Who do you think you are?",
+   "author": "Gates McFadden",
+   "feed": "https://feeds.megaphone.fm/gatesmcfaddeninvestigateswhodoyouthinkyouare",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/9d/1a/36/9d1a361b-14ff-110a-718c-2c027fb4672e/mza_14961964149319746949.jpeg/600x600bb.jpg",
+   "category": "Ideas & Culture"
+  },
+  {
+   "id": "1092247887",
+   "title": "Giants Talk: A San Francisco Giants Podcast",
+   "author": "Alex Pavlovic, Cole Kuiper, NBC Sports Bay Area",
+   "feed": "https://feeds.simplecast.com/H82BH3AP",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/fd/9a/b4/fd9ab45c-ba40-f25f-86b8-a93663f89be7/mza_11466494886773564640.jpeg/600x600bb.jpg",
+   "category": "Giants"
+  },
+  {
+   "id": "1795483480",
+   "title": "Good Hang with Amy Poehler",
+   "author": "The Ringer",
+   "feed": "https://feeds.megaphone.fm/good-hang-with-amy-poehler",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/2b/94/bb/2b94bb6e-44f1-9d57-7748-b7456072806d/mza_1064202164981856225.jpg/600x600bb.jpg",
+   "category": "Comedy & Entertainment"
+  },
+  {
+   "id": "1081584611",
+   "title": "The Gray Area with Sean Illing",
+   "author": "Vox",
+   "feed": "https://feeds.megaphone.fm/theezrakleinshow",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/cb/15/27/cb152766-928c-cb54-8fff-8d90cb10d3a0/mza_9433267013183018969.jpeg/600x600bb.jpg",
+   "category": "Ideas & Culture"
+  },
+  {
+   "id": "1467297559",
+   "title": "Hacks On Tap",
+   "author": "Vox Media",
+   "feed": "https://feeds.megaphone.fm/VMP7545057845",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/43/1e/1f/431e1fc3-e9d9-92ba-77c8-4ee07d5caac5/mza_4049853093869590479.jpeg/600x600bb.jpg",
+   "category": "News & Politics"
+  },
+  {
+   "id": "1279409241",
+   "title": "Half Hour of Heterodoxy",
+   "author": "Heterodox Academy",
+   "feed": "https://feeds.simplecast.com/KjVJMskS",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/53/d5/0d/53d50d93-8527-45f4-f07d-81bf5ae67e2f/mza_4308991334652345035.jpg/600x600bb.jpg",
+   "category": "Ideas & Culture",
+   "youtube": {
+    "channel": "UCMg03HgM23qYC7TL2NM1F7g",
+    "handle": "@HeterodoxAcademy",
+    "only": false
+   }
+  },
+  {
+   "id": "1895066656",
+   "title": "Hidden History with Dr. Harini Bhat",
+   "author": "Rewind Studios",
+   "feed": "https://rss.amperwave.net/v2/feed/audacynetwork/9aee7d7eb8876a2f6880dceccf4955f6",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/50/5e/a6/505ea6d1-7ead-9877-22ea-5dc0b6642a49/mza_14229330381885096858.png/600x600bb.jpg",
+   "category": "History & Legends"
+  },
+  {
+   "id": "839139321",
+   "title": "I Doubt It Podcast",
+   "author": "Jesse Dollemore and Brittany Page",
+   "feed": "https://feeds.megaphone.fm/CMMO5783003301",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/63/75/2e/63752e89-7c71-a36e-06fc-9c145f4c612e/mza_3213345421349896348.jpg/600x600bb.jpg",
+   "category": "News & Politics"
+  },
+  {
+   "id": "1651876897",
+   "title": "If Books Could Kill",
+   "author": "Michael Hobbes & Peter Shamshiri",
+   "feed": "https://rss.buzzsprout.com/2040953.rss",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/e3/d3/48/e3d34893-d1ac-8840-cb95-f753773bc10f/mza_1644670244607841438.jpg/600x600bb.jpg",
+   "category": "Ideas & Culture"
+  },
+  {
+   "id": "953290300",
+   "title": "Invisibilia",
+   "author": "NPR",
+   "feed": "https://feeds.npr.org/510307/podcast.xml",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/94/ca/7d/94ca7dfa-3a90-ce42-a07a-ee2b5b95f875/mza_2396632216888233532.jpg/600x600bb.jpg",
+   "category": "Ideas & Culture"
+  },
+  {
+   "id": "1497098326",
+   "title": "JavaScript Talks",
+   "author": "JS Talks",
+   "feed": "https://js-talks.netlify.app/rss.xml",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts115/v4/aa/7d/0f/aa7d0fd8-7493-9995-dbf4-96591703ce16/mza_474047349321706130.png/600x600bb.jpg",
+   "category": "Tech"
+  },
+  {
+   "id": "73329771",
+   "title": "KCRW's Left, Right & Center",
+   "author": "KCRW",
+   "feed": "https://leftrightandcenter-feed.kcrw.com",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts116/v4/71/99/19/719919b7-d563-0ef0-036a-8dcf9e04053a/mza_11041788260771145723.png/600x600bb.jpg",
+   "category": "News & Politics"
+  },
+  {
+   "id": "1706868190",
+   "title": "The Krueg Show",
+   "author": "Larry Krueger",
+   "feed": "https://rss.pdrl.fm/4f2da0/feeds.simplecast.com/_g32XEwA",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/b4/06/6d/b4066d4c-45c2-1af5-9607-2dba90299fe1/mza_3872131437839531311.jpeg/600x600bb.jpg",
+   "category": "Giants"
+  },
+  {
+   "id": "1434243584",
+   "title": "Lex Fridman Podcast",
+   "author": "Lex Fridman",
+   "feed": "https://lexfridman.com/feed/podcast/",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/ea/42/d7/ea42d7b1-8d4e-dd97-da5d-c508756550ca/mza_16782152345430036863.jpg/600x600bb.jpg",
+   "category": "Science",
+   "id3chapters": true,
+   "youtube": {
+    "channel": "UCSHZKyawb77ixDdsGog4iWA",
+    "handle": "@lexfridman",
+    "only": true
+   }
+  },
+  {
+   "id": "1455909225",
+   "title": "Locked On Giants – Daily Podcast On The San Francisco Giants",
+   "author": "Locked On Podcast Network, Ben Kaspick",
+   "feed": "https://rss.pdrl.fm/62b9f9/feeds.simplecast.com/MVTI95hg",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts112/v4/4b/b1/63/4bb1636f-fd07-172c-1291-824d765f43c4/mza_432343512645554554.jpg/600x600bb.jpg",
+   "category": "Giants"
+  },
+  {
+   "id": "978052928",
+   "title": "Lore",
+   "author": "Aaron Mahnke",
+   "feed": "https://rss.libsyn.com/shows/65267/destinations/259905.xml",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts126/v4/9b/e0/c0/9be0c09c-b803-4774-77d3-85167bc87a31/mza_16743750170316675841.jpg/600x600bb.jpg",
+   "category": "History & Legends"
+  },
+  {
+   "id": "1216346463",
+   "title": "Lovett or Leave It",
+   "author": "Lovett or Leave It",
+   "feed": "https://audioboom.com/channels/5166622.rss",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/39/5f/31/395f3109-67f6-1c6b-206e-828e313a01b3/mza_13713977145154429240.jpg/600x600bb.jpg",
+   "category": "News & Politics"
+  },
+  {
+   "id": "733163012",
+   "title": "Making Sense with Sam Harris",
+   "author": "Sam Harris",
+   "feed": "https://rss.libsyn.com/shows/94577/destinations/480596.xml",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts123/v4/5b/70/e7/5b70e7ed-6c28-654b-99b1-f243bff3dbe5/mza_8512518449833623366.png/600x600bb.jpg",
+   "category": "Ideas & Culture",
+   "youtube": {
+    "channel": "UCNAxrHudMfdzNi6NxruKPLw",
+    "handle": "@samharrisorg",
+    "only": true
+   }
+  },
+  {
+   "id": "201853034",
+   "title": "Marketplace",
+   "author": "Marketplace",
+   "feed": "https://feeds.publicradio.org/public_feeds/marketplace",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/90/34/b4/9034b43b-0a18-3ed4-1f69-c18dc001c891/mza_2187886854309824642.jpg/600x600bb.jpg",
+   "category": "News & Politics"
+  },
+  {
+   "id": "1561694362",
+   "title": "The MCU Crew",
+   "author": "itmeJP",
+   "feed": "https://www.omnycontent.com/d/playlist/2a719a76-7cdb-4059-a7a0-af33012f7563/63db02d1-0966-43f9-ae18-af3801524113/161f9a8b-cdf5-4a18-a8e3-af3801524126/podcast.rss",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts122/v4/2f/df/96/2fdf966b-b738-7fb3-40ba-6cfd7c3030e4/mza_13845468198639072093.jpg/600x600bb.jpg",
+   "category": "Comedy & Entertainment"
+  },
+  {
+   "id": "1352860989",
+   "title": "The Michael Shermer Show",
+   "author": "Michael Shermer",
+   "feed": "https://rss.pdrl.fm/851fd8/feeds.libsyn.com/98571/rss/?redirect=false",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts116/v4/b1/1b/5a/b11b5ad4-b160-7284-5b7c-cdc8daf251d7/mza_556097899631146588.jpg/600x600bb.jpg",
+   "category": "Ideas & Culture"
+  },
+  {
+   "id": "420929545",
+   "title": "Money Talks from The Economist",
+   "author": "The Economist",
+   "feed": "https://access.acast.com/rss/39fc4a99-8861-437d-81e2-684d13e48f92",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/e5/80/34/e5803413-13d7-afc0-7c11-0db069c3f5ba/mza_9283903148096595984.jpeg/600x600bb.jpg",
+   "category": "News & Politics"
+  },
+  {
+   "id": "1094490100",
+   "title": "Monsters Among Us",
+   "author": "Derek Hayes | Audioboom Studios",
+   "feed": "https://audioboom.com/channels/5147816.rss",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/f4/d5/8c/f4d58c23-0750-66bf-393f-4a77b578f5bf/mza_5014085428213123942.jpg/600x600bb.jpg",
+   "category": "Mysteries & UFOs"
+  },
+  {
+   "id": "325079170",
+   "title": "MonsterTalk",
+   "author": "Blake Smith",
+   "feed": "https://www.spreaker.com/show/6267523/episodes/feed",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/5a/99/97/5a999746-9cc7-f4ed-3b85-9a45288a0805/mza_6309649759997120809.jpg/600x600bb.jpg",
+   "category": "Mysteries & UFOs"
+  },
+  {
+   "id": "1145222943",
+   "title": "Mysterious Radio: Paranormal, UFO & Lore Interviews",
+   "author": "Mysterious Radio",
+   "feed": "https://feeds.libsyn.com/624445/rss",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/3b/aa/c3/3baac323-1f74-650a-2c04-f35ad21a51e9/mza_7781202281310692386.jpg/600x600bb.jpg",
+   "category": "Mysteries & UFOs"
+  },
+  {
+   "id": "990897842",
+   "title": "Myths and Legends",
+   "author": "Jason Weiser, Carissa Weiser, Nextpod",
+   "feed": "https://audioboom.com/channels/5094626.rss",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts126/v4/db/81/8e/db818e29-55f8-5343-a185-8db92a0e1981/mza_6705057508729367288.jpg/600x600bb.jpg",
+   "category": "History & Legends"
+  },
+  {
+   "id": "81934659",
+   "title": "Nature Podcast",
+   "author": "Springer Nature Limited",
+   "feed": "https://feeds.acast.com/public/shows/0185cea5-9e3b-4b82-a887-26f91f92765f",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/d8/c8/39/d8c839e8-9ad2-e260-d99a-602a7d7b290f/mza_17204377400575465837.jpeg/600x600bb.jpg",
+   "category": "Science"
+  },
+  {
+   "id": "1647085571",
+   "title": "The Next Level",
+   "author": "The Bulwark",
+   "feed": "https://audioboom.com/channels/5114287.rss",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/95/b8/0d/95b80d02-4fd9-2f3c-c957-775fa5407daf/mza_6278451450757616167.jpg/600x600bb.jpg",
+   "category": "News & Politics"
+  },
+  {
+   "id": "1833063933",
+   "title": "NOVA Now",
+   "author": "GBH",
+   "feed": "https://publicfeeds.net/f/322/nova-now/feed-rss.xml",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/31/21/20/31212033-1425-0aa5-f12f-819d06af25a8/mza_12773462122052380918.jpg/600x600bb.jpg",
+   "category": "Science"
+  },
+  {
+   "id": "1610392666",
+   "title": "Offline with Jon Favreau",
+   "author": "Crooked Media",
+   "feed": "https://audioboom.com/channels/5166623.rss",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/e3/e9/32/e3e9325e-184d-680c-7673-805c492d740c/mza_17826262403729562229.jpg/600x600bb.jpg",
+   "category": "News & Politics",
+   "youtube": {
+    "channel": "UCwsMokuXvRnLFF-k94QSndw",
+    "handle": "@OfflineWithJonFavreau",
+    "only": true
+   }
+  },
+  {
+   "id": "73330715",
+   "title": "On the Media",
+   "author": "WNYC Studios",
+   "feed": "https://feeds.simplecast.com/o4jAFXaw",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/5e/ba/12/5eba1288-e5e1-62f5-59df-4b36cb5fc5df/mza_3713685845546915811.jpg/600x600bb.jpg",
+   "category": "News & Politics"
+  },
+  {
+   "id": "302000822",
+   "title": "Open Minds UAP News",
+   "author": "Alejandro Rojas",
+   "feed": "https://www.spreaker.com/show/6161161/episodes/feed",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/0d/63/91/0d6391e1-d5fa-b5f1-2570-71b78a6c61a6/mza_17306567109791080408.jpg/600x600bb.jpg",
+   "category": "Mysteries & UFOs"
+  },
+  {
+   "id": "1533675150",
+   "title": "The Other Side of Midnight with Walter Sterling",
+   "author": "Podcast WABCRadio",
+   "feed": "https://www.spreaker.com/show/7177415/episodes/feed",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/81/dc/93/81dc93b1-d5ab-e7b6-1448-b59390ac143b/mza_16220435756762151982.jpg/600x600bb.jpg",
+   "category": "Mysteries & UFOs"
+  },
+  {
+   "id": "659155419",
+   "title": "Philosophize This!",
+   "author": "Stephen West",
+   "feed": "https://feeds.megaphone.fm/QCD6036500916",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/c1/b7/51/c1b751eb-ab38-f11c-d6c1-0a9de79b7061/mza_12134548126279202007.jpg/600x600bb.jpg",
+   "category": "Ideas & Culture"
+  },
+  {
+   "id": "1151965239",
+   "title": "Philosophy For Our Times",
+   "author": "Institute of Art and Ideas",
+   "feed": "https://api.riverside.com/hosting/TNifTu4l.rss",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/4f/a2/45/4fa245d0-95ef-9738-9240-3b4afb70960e/mza_7870251956583780898.jpeg/600x600bb.jpg",
+   "category": "Ideas & Culture"
+  },
+  {
+   "id": "290783428",
+   "title": "Planet Money",
+   "author": "NPR",
+   "feed": "https://feeds.npr.org/510289/podcast.xml",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/85/df/53/85df5334-0fae-28a9-2bc4-b97b81061d0e/mza_10839245066228881011.jpg/600x600bb.jpg",
+   "category": "Ideas & Culture"
+  },
+  {
+   "id": "1192761536",
+   "title": "Pod Save America",
+   "author": "Pod Save America",
+   "feed": "https://audioboom.com/channels/5166624.rss",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/44/dc/61/44dc6141-25e9-5bb3-e19e-a2337233d19e/mza_5506771870755587769.jpg/600x600bb.jpg",
+   "category": "News & Politics",
+   "youtube": {
+    "channel": "UCKRoXz3hHAu2XL_k3Ef4vJQ",
+    "handle": "@PodSaveAmerica",
+    "only": true
+   }
+  },
+  {
+   "id": "1200016351",
+   "title": "Pod Save the World",
+   "author": "Pod Save the World",
+   "feed": "https://audioboom.com/channels/5166626.rss",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/41/3b/73/413b73d5-0b9d-667b-23c2-46dcdb379218/mza_7676514152444871967.jpg/600x600bb.jpg",
+   "category": "News & Politics",
+   "youtube": {
+    "channel": "UCWeKyWiFeb4YV8e3EibEqQw",
+    "handle": "@PodSaveTheWorld",
+    "only": true
+   }
+  },
+  {
+   "id": "1469999563",
+   "title": "The Portal",
+   "author": "Kast Media",
+   "feed": "https://feed.cdnstream1.com/zjb/feed/download/d9/8a/71/d98a71ac-d1a3-4d92-ab64-64b4ff3192d1.xml",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts116/v4/79/2c/e7/792ce7c3-99fd-f352-f8b4-9aa978056bb4/mza_14575342499472972695.jpg/600x600bb.jpg",
+   "category": "Ideas & Culture",
+   "youtube": {
+    "channel": "UCR85PW_B_7_Aisx5vNS7Gjw",
+    "handle": "@EricWeinsteinPhD",
+    "only": false
+   }
+  },
+  {
+   "id": "1776302213",
+   "title": "PSIcoactivo",
+   "author": "KGRA Digital Broadcasting",
+   "feed": "https://www.spreaker.com/show/6296095/episodes/feed",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/2c/67/e1/2c67e1ad-3680-e811-59cb-61bedc336b5c/mza_8717488626765847121.jpg/600x600bb.jpg",
+   "category": "Mysteries & UFOs"
+  },
+  {
+   "id": "1441708286",
+   "title": "Quillette Podcast",
+   "author": "Quillette",
+   "feed": "https://feeds.megaphone.fm/QLTUL2757454477",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/2a/c4/9b/2ac49b61-7025-5b24-e14e-fce86755433e/mza_12082714488924525464.jpg/600x600bb.jpg",
+   "category": "Ideas & Culture"
+  },
+  {
+   "id": "1507423923",
+   "title": "Rabbit Hole",
+   "author": "The New York Times",
+   "feed": "https://feeds.simplecast.com/rRMR9QHI",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/8c/5a/a7/8c5aa731-f3cd-c214-968f-d70c1de62a67/mza_11141039469126456067.jpeg/600x600bb.jpg",
+   "category": "Ideas & Culture"
+  },
+  {
+   "id": "294055449",
+   "title": "The Rachel Maddow Show",
+   "author": "Rachel Maddow, MS NOW",
+   "feed": "https://feeds.simplecast.com/LU_7w7GU",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/b6/f9/25/b6f92595-26d3-7991-646f-e99345579850/mza_15700909801633924951.jpg/600x600bb.jpg",
+   "category": "News & Politics"
+  },
+  {
+   "id": "152249110",
+   "title": "Radiolab",
+   "author": "WNYC Studios",
+   "feed": "https://feeds.simplecast.com/EmVW7VGp",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/2b/b2/4d/2bb24d28-f3bb-916f-6bf3-9e125ba5219b/mza_4476298389845914795.jpg/600x600bb.jpg",
+   "category": "Science"
+  },
+  {
+   "id": "1341969432",
+   "title": "React Podcast",
+   "author": "Michael Chan",
+   "feed": "https://feeds.simplecast.com/JoR28o79",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts115/v4/d2/ef/9b/d2ef9b75-fcf9-1fde-35e3-9f2c208c26bc/mza_14454028556285985908.jpg/600x600bb.jpg",
+   "category": "Tech"
+  },
+  {
+   "id": "1485021241",
+   "title": "The Reason Interview With Nick Gillespie",
+   "author": "The Reason Interview With Nick Gillespie",
+   "feed": "https://reason.com/podcasts/the-reason-interview-with-nick-gillespie/feed/",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts113/v4/2c/91/e1/2c91e13c-b9a1-ac53-9502-4ad3424ea4fc/mza_10248534347324204234.jpg/600x600bb.jpg",
+   "category": "Ideas & Culture"
+  },
+  {
+   "id": "1155629323",
+   "title": "The Reason Roundtable",
+   "author": "The Reason Roundtable",
+   "feed": "https://reason.com/podcasts/the-reason-roundtable/feed/",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts113/v4/36/4d/dc/364ddca2-8394-e419-0b2d-932b8a143684/mza_1834508386444147017.jpg/600x600bb.jpg",
+   "category": "News & Politics"
+  },
+  {
+   "id": "1747419310",
+   "title": "Rebel Wisdom Podcast",
+   "author": "Rebel Wisdom",
+   "feed": "https://anchor.fm/s/f67c6978/podcast/rss",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/ba/9d/6d/ba9d6db4-092a-e488-17c6-9fe6a0ef9130/mza_3394770449566450036.jpg/600x600bb.jpg",
+   "category": "Ideas & Culture",
+   "youtube": {
+    "channel": "UCFQ6Gptuq-sLflbJ4YY3Umw",
+    "handle": "@RebelWisdom",
+    "only": true
+   }
+  },
+  {
+   "id": "1119389968",
+   "title": "Revisionist History",
+   "author": "Pushkin Industries",
+   "feed": "https://www.omnycontent.com/d/playlist/e73c998e-6e60-432f-8610-ae210140c5b1/0e563f45-9d14-4ce8-8ef0-ae32006cd7e7/0d4cc74d-fff7-4b89-8818-ae32006cd7f0/podcast.rss",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/ab/de/98/abde988e-2dba-a34a-cd73-ac91341f0399/mza_7021629692279892458.jpg/600x600bb.jpg",
+   "category": "Ideas & Culture"
+  },
+  {
+   "id": "1408796715",
+   "title": "Runaway Country with Alex Wagner",
+   "author": "Runaway Country with Alex Wagner",
+   "feed": "https://audioboom.com/channels/5166628.rss",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/db/45/5a/db455a87-3133-9389-62c2-89ef2f4bfecd/mza_1497272084824272620.jpg/600x600bb.jpg",
+   "category": "News & Politics"
+  },
+  {
+   "id": "1512034515",
+   "title": "Santa Barbara Talks with Josh Molina",
+   "author": "Josh Molina",
+   "feed": "https://feeds.soundcloud.com/users/soundcloud:users:800870458/sounds.rss",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts115/v4/44/eb/75/44eb7584-2609-97ee-c567-5ccf1bc9e4a0/mza_9712098501500093112.jpg/600x600bb.jpg",
+   "category": "News & Politics"
+  },
+  {
+   "id": "120329020",
+   "title": "Science Magazine Podcast",
+   "author": "Science Magazine",
+   "feed": "https://feeds.megaphone.fm/AAAS8717073854",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/b0/d3/a3/b0d3a397-8a33-3cd1-9cb7-91808b893ee2/mza_6969596256435242856.jpg/600x600bb.jpg",
+   "category": "Science"
+  },
+  {
+   "id": "1051557000",
+   "title": "Science Vs",
+   "author": "Spotify Studios",
+   "feed": "https://feeds.megaphone.fm/sciencevs",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/62/15/18/621518e5-8eb3-392b-25a7-e7444aab86b6/mza_815589518502039493.jpg/600x600bb.jpg",
+   "category": "Science"
+  },
+  {
+   "id": "1680240005",
+   "title": "ScreenCrush: The Podcast",
+   "author": "ScreenCrush",
+   "feed": "https://rss.amperwave.net/v2/feed/townsquare-media/0b028966e04f05904085570f0fe1036e",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/62/67/bf/6267bfdd-dd35-1deb-a1e8-adb484ac5322/mza_11321040761951598989.jpg/600x600bb.jpg",
+   "category": "Comedy & Entertainment",
+   "youtube": {
+    "channel": "UCgMJGv4cQl8-q71AyFeFmtg",
+    "handle": "@ScreenCrush",
+    "only": true
+   }
+  },
+  {
+   "id": "1406534739",
+   "title": "Sean Carroll's Mindscape: Science, Society, Philosophy, Culture, Arts, and Ideas",
+   "author": "Sean Carroll",
+   "feed": "https://rss.libsyn.com/shows/604590/destinations/5264190.xml",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts125/v4/d3/22/95/d32295a0-f278-1807-9fde-5698c30aac30/mza_16649100911920251614.jpeg/600x600bb.jpg",
+   "category": "Science",
+   "youtube": {
+    "channel": "UCRhV1rWIpm_pU19bBm_2RXw",
+    "handle": "@seancarroll",
+    "only": true
+   }
+  },
+  {
+   "id": "493890455",
+   "title": "ShopTalk",
+   "author": "Chris Coyier & Dave Rupert",
+   "feed": "https://shoptalkshow.com/feed/podcast/",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts125/v4/7b/29/20/7b2920d0-37a9-36e6-aa84-f3249b03f48e/mza_4868856405339949426.png/600x600bb.jpg",
+   "category": "Tech",
+   "id3chapters": true,
+   "youtube": {
+    "channel": "UC0z_y1EirBhSQN96P4foZ1A",
+    "handle": "@ShopTalkShow",
+    "only": true
+   }
+  },
+  {
+   "id": "1019576853",
+   "title": "Software Engineering Daily",
+   "author": "Software Engineering Daily",
+   "feed": "https://softwareengineeringdaily.com/feed/podcast/",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/36/a1/dd/36a1dd7e-52ed-78f7-e13f-4261a65cfc58/mza_12039623462681143710.png/600x600bb.jpg",
+   "category": "Tech"
+  },
+  {
+   "id": "1265845136",
+   "title": "Stay Tuned with Preet",
+   "author": "Preet Bharara",
+   "feed": "https://feeds.megaphone.fm/VMP5489734702",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/7e/e1/3a/7ee13a8f-2614-2341-8fdd-5a25f777dc74/mza_10387317814806931500.jpg/600x600bb.jpg",
+   "category": "News & Politics"
+  },
+  {
+   "id": "6804845033",
+   "title": "Still Counting",
+   "author": "Crooked Media",
+   "feed": "https://audioboom.com/channels/5174627.rss",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/e6/69/64/e6696436-7fe4-1a21-e788-0bbfe92f1e54/mza_4481394631635310090.png/600x600bb.jpg",
+   "category": "News & Politics"
+  },
+  {
+   "id": "1469168641",
+   "title": "Strict Scrutiny",
+   "author": "Strict Scrutiny",
+   "feed": "https://audioboom.com/channels/5166629.rss",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/68/3f/62/683f6228-b15b-e0de-8c2c-e8c20860ca98/mza_763663699315012405.png/600x600bb.jpg",
+   "category": "News & Politics"
+  },
+  {
+   "id": "732915228",
+   "title": "Stuff They Don't Want You To Know",
+   "author": "iHeartPodcasts",
+   "feed": "https://www.omnycontent.com/d/playlist/e73c998e-6e60-432f-8610-ae210140c5b1/2e824128-fbd5-4c9e-9a57-ae2f0056b0c4/66d98a23-900c-44b0-a40b-ae2f0056b0db/podcast.rss",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/b3/f6/d7/b3f6d733-0924-1923-d33e-c0e0a8b6486d/mza_12499946169636574274.jpg/600x600bb.jpg",
+   "category": "Mysteries & UFOs"
+  },
+  {
+   "id": "278981407",
+   "title": "Stuff You Should Know",
+   "author": "iHeartPodcasts",
+   "feed": "https://www.omnycontent.com/d/playlist/e73c998e-6e60-432f-8610-ae210140c5b1/a91018a4-ea4f-4130-bf55-ae270180c327/44710ecc-10bb-48d1-93c7-ae270180c33e/podcast.rss",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/aa/82/91/aa82912f-23ee-6f6a-583c-a4e993164d0e/mza_12111158076643383507.jpg/600x600bb.jpg",
+   "category": "Ideas & Culture",
+   "youtube": {
+    "channel": "UCTb6Oy0TXI03iEUdRMR9dnw",
+    "handle": "@stuffyoushouldknow",
+    "only": true
+   }
+  },
+  {
+   "id": "1280171980",
+   "title": "Style and Direction",
+   "author": "Ethan and Spencer",
+   "feed": "https://feeds.soundcloud.com/users/soundcloud:users:312960898/sounds.rss",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/4e/d9/0e/4ed90e39-81a9-c992-0dc8-501da8972488/mza_15967165660243659581.jpg/600x600bb.jpg",
+   "category": "Ideas & Culture"
+  },
+  {
+   "id": "1074477184",
+   "title": "The Sub Pop Podcast",
+   "author": "Sub Pop Records",
+   "feed": "http://feeds.subpop.fm/subpoppodcast",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts125/v4/74/c9/01/74c901e4-05af-5e3c-33e0-fee88f4de6c3/mza_15396128209401210104.jpg/600x600bb.jpg",
+   "category": "Ideas & Culture"
+  },
+  {
+   "id": "1253186678",
+   "title": "Syntax - Tasty Web Development Treats",
+   "author": "Wes Bos & Scott Tolinski - Full Stack JavaScript Web Developers",
+   "feed": "https://feeds.megaphone.fm/FSI1483080183",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/14/0a/50/140a50d8-f974-6542-e6d5-8362701cde23/mza_16091458091864441720.jpeg/600x600bb.jpg",
+   "category": "Tech",
+   "youtube": {
+    "channel": "UCyU5wkjgQYGRB0hIHMwm2Sg",
+    "handle": "@syntaxfm",
+    "only": true
+   }
+  },
+  {
+   "id": "160904630",
+   "title": "TED Talks Daily",
+   "author": "TED",
+   "feed": "https://feeds.acast.com/public/shows/67587e77c705e441797aff96",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts116/v4/2e/cf/99/2ecf996f-71f7-604f-b0a0-43116b9d6619/mza_10257768296573848480.png/600x600bb.jpg",
+   "category": "Ideas & Culture",
+   "youtube": {
+    "channel": "UCAuUUnT6oDeKwE6v1NGQxug",
+    "handle": "@TED",
+    "only": false
+   }
+  },
+  {
+   "id": "1511121397",
+   "title": "That UFO Podcast",
+   "author": "That UFO Podcast",
+   "feed": "https://audioboom.com/channels/5024014.rss",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/ff/b6/6b/ffb66b7d-88f8-88f3-b67c-9189f5167ec1/mza_9140250549875290339.png/600x600bb.jpg",
+   "category": "Mysteries & UFOs",
+   "youtube": {
+    "channel": "UCHw9Lru3EcpRQyM7AI5TlmA",
+    "handle": "@ThatUFOPodcast",
+    "only": true
+   }
+  },
+  {
+   "id": "201671138",
+   "title": "This American Life",
+   "author": "This American Life",
+   "feed": "https://www.thisamericanlife.org/podcast/rss.xml",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/fd/3c/12/fd3c1215-892b-1c4d-2ff5-cfb7998c3f7c/mza_10880637376617104220.png/600x600bb.jpg",
+   "category": "Ideas & Culture"
+  },
+  {
+   "id": "1190981360",
+   "title": "This Past Weekend w/ Theo Von",
+   "author": "Theo Von",
+   "feed": "https://feeds.megaphone.fm/thispastweekend",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/9c/f6/5a/9cf65abb-f8db-fb7b-984f-b4276a1e8c85/mza_2107148709996282347.jpg/600x600bb.jpg",
+   "category": "Comedy & Entertainment",
+   "youtube": {
+    "channel": "UC5AQEUAwCh1sGDvkQtkDWUQ",
+    "handle": "@TheoVon",
+    "only": true
+   }
+  },
+  {
+   "id": "1474001390",
+   "title": "TRUE ANON TRUTH FEED",
+   "author": "TrueAnon",
+   "feed": "https://www.patreon.com/public-rss/2963533?show=875184",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/3f/7f/86/3f7f8690-baca-c549-fa69-0166d8101e31/mza_11692394208238860671.png/600x600bb.jpg",
+   "category": "News & Politics"
+  },
+  {
+   "id": "1517910497",
+   "title": "TTS Talks",
+   "author": "To The Stars Inc.",
+   "feed": "https://rss.buzzsprout.com/1150631.rss",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/72/3d/ca/723dca05-bd5b-1d79-4d1f-1cdd8acbe020/mza_5015249319610747397.jpg/600x600bb.jpg",
+   "category": "Mysteries & UFOs"
+  },
+  {
+   "id": "155963493",
+   "title": "The Unexplained With Howard Hughes",
+   "author": "Howard Hughes",
+   "feed": "https://theunexplained.tv/feed2.xml",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts123/v4/bb/67/6d/bb676d3b-80f5-e4ec-93f6-d4f82ce19904/mza_6513796981471766632.jpg/600x600bb.jpg",
+   "category": "Mysteries & UFOs"
+  },
+  {
+   "id": "430333725",
+   "title": "The Vergecast",
+   "author": "The Verge",
+   "feed": "https://feeds.megaphone.fm/vergecast",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/1d/64/cd/1d64cd45-4497-ee37-0e35-df108046d9e6/mza_781548057726205094.jpg/600x600bb.jpg",
+   "category": "Tech"
+  },
+  {
+   "id": "1474429475",
+   "title": "Waveform: The MKBHD Podcast",
+   "author": "MKBHD",
+   "feed": "https://feeds.megaphone.fm/STU4418364045",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/92/dd/8e/92dd8eed-43ec-dc47-50ae-c1ec7c0a3353/mza_3861776104886813687.jpg/600x600bb.jpg",
+   "category": "Tech",
+   "youtube": {
+    "channel": "UCEcrRXW3oEYfUctetZTAWLw",
+    "handle": "@Waveform",
+    "only": true
+   }
+  },
+  {
+   "id": "1437407176",
+   "title": "Web Rush",
+   "author": "Dan Wahlin, John Papa, Ward Bell, Craig Shoemaker",
+   "feed": "https://feeds.simplecast.com/tOjNXec5",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts115/v4/0c/f5/00/0cf500ac-d102-8fe8-034b-f662c5aba462/mza_12942174697357509418.jpg/600x600bb.jpg",
+   "category": "Tech",
+   "id3chapters": true
+  },
+  {
+   "id": "1183017174",
+   "title": "Wild Ideas Worth Living",
+   "author": "REI Co-op",
+   "feed": "https://feeds.simplecast.com/pyeGnjub",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts122/v4/ec/6a/03/ec6a0354-ad74-a2e8-6249-f341fd81ea21/mza_3887680102088589718.jpg/600x600bb.jpg",
+   "category": "Ideas & Culture"
+  }
+ ]
+}
