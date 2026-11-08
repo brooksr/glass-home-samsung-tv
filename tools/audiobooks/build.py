@@ -7,6 +7,7 @@ downloaded most on the Internet Archive (where LibriVox keeps the MP3s). The
 chapters (title, MP3, seconds) go in the file, so the app needs no lookups.
 
     python3 tools/audiobooks/build.py        # about a minute
+    python3 tools/audiobooks/build.py --standalone   # STANDALONE_PICKS only
 
 Standard library only. Picks LibriVox doesn't have are listed at the end.
 """
@@ -21,6 +22,8 @@ from concurrent.futures import ThreadPoolExecutor
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, 'audiobooks.json')
+# Extra books for the shareable phone build only (gradle -Pstandalone adds them).
+STANDALONE_OUT = os.path.join(HERE, 'audiobooks-standalone.json')
 
 # (shelf, title, author's last name[, LibriVox's title, or its volumes in order])
 # LibriVox leaves off a leading The/A and often keeps the subtitle.
@@ -128,6 +131,12 @@ PICKS = [
     ("Children's Classics", 'The Jungle Book', 'Kipling'),
     ("Children's Classics", 'The Adventures of Tom Sawyer', 'Twain'),
     ("Children's Classics", 'Black Beauty', 'Sewell'),
+]
+
+# (shelf, title, LibriVox id[, author shown]): one recording chosen by hand.
+STANDALONE_PICKS = [
+    ('Bible', 'King James Version', 10501, 'The Holy Bible'),
+    ('Bible', 'World English Bible', 11622, 'The Holy Bible'),   # modern English; ASV (15545) and Douay-Rheims (18352) exist too
 ]
 
 SKIP = re.compile(r'dramatic|abridged|excerpt|selections|play\b|\bpoem\b|condensed|children|retold|young folks|study guide|'
@@ -245,11 +254,22 @@ def loads(url):
         return False
 
 
+def by_id(lv_id):
+    data = get(f'https://librivox.org/api/feed/audiobooks/?id={lv_id}&format=json&extended=1') or {}
+    b = (data.get('books') or [None])[0]
+    return b, downloads([ia_id(b)]).get(ia_id(b), 0) if b else 0
+
+
 def pick(entry):
     shelf, title, author = entry[:3]
-    lv = entry[3] if len(entry) > 3 else title
-    volumes = lv if isinstance(lv, list) else [lv]
-    parts = [best_of(v, author) for v in volumes]
+    shown = None
+    if isinstance(author, int):
+        volumes, parts = [title], [by_id(author)]
+        shown = entry[3] if len(entry) > 3 else None
+    else:
+        lv = entry[3] if len(entry) > 3 else title
+        volumes = lv if isinstance(lv, list) else [lv]
+        parts = [best_of(v, author) for v in volumes]
     if any(b is None for b, _ in parts):
         return entry, None
     first = parts[0][0]
@@ -266,7 +286,7 @@ def pick(entry):
     return entry, {
         'id': 'lv' + first['id'],
         'title': title,
-        'author': ', '.join(a for a in authors if a and 'anonymous' not in a.lower()) or 'Anonymous',
+        'author': shown or ', '.join(a for a in authors if a and 'anonymous' not in a.lower()) or 'Anonymous',
         'shelf': shelf,
         'desc': plain(first.get('description')),
         'art': cover(ia) if ia else '',
@@ -279,15 +299,18 @@ def pick(entry):
 
 
 def main():
+    standalone = '--standalone' in sys.argv[1:]
+    picks, out = (STANDALONE_PICKS, STANDALONE_OUT) if standalone else (PICKS, OUT)
     with ThreadPoolExecutor(6) as pool:
-        results = list(pool.map(pick, PICKS))
+        results = list(pool.map(pick, picks))
     books = [b for _, b in results if b and b['chapters']]
     missing = [e for e, b in results if not b or not b['chapters']]
-    with open(OUT + '.tmp', 'w') as f:
-        json.dump({'_note': 'Made by build.py from LibriVox (public domain recordings); edit PICKS there, not this file.',
+    with open(out + '.tmp', 'w') as f:
+        json.dump({'_note': 'Made by build.py from LibriVox (public domain recordings); edit '
+                            f'{"STANDALONE_PICKS" if standalone else "PICKS"} there, not this file.',
                    'books': books}, f, ensure_ascii=False, separators=(',', ':'))
-    os.replace(OUT + '.tmp', OUT)
-    print(f'{len(books)} books, {sum(len(b["chapters"]) for b in books)} chapters -> {OUT}')
+    os.replace(out + '.tmp', out)
+    print(f'{len(books)} books, {sum(len(b["chapters"]) for b in books)} chapters -> {out}')
     for e in missing:
         print(f'  not found: {e[1]} ({e[2]})', file=sys.stderr)
 

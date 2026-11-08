@@ -39,6 +39,14 @@
    "category": "News & Politics"
   },
   {
+   "id": "1771917740",
+   "title": "American Alchemy with Jesse Michels",
+   "author": "Jesse Michels",
+   "feed": "https://rss.pdrl.fm/d763df/feeds.megaphone.fm/jessemichels",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/dc/82/af/dc82af71-3bb1-8aae-a0d1-5510646d2f4a/mza_8358567098597130017.jpeg/600x600bb.jpg",
+   "category": "Mysteries & UFOs"
+  },
+  {
    "id": "1435516849",
    "title": "American Scandal",
    "author": "Audible Original",
@@ -81,6 +89,14 @@
    "author": "SpectreVision Radio",
    "feed": "https://feeds.megaphone.fm/PHTE6806016784",
    "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/36/d1/a1/36d1a1c0-6901-e775-f263-553229014750/mza_11260057747399637212.jpg/600x600bb.jpg",
+   "category": "Mysteries & UFOs"
+  },
+  {
+   "id": "1522131146",
+   "title": "Believing the Bizarre: Paranormal Podcast",
+   "author": "Believing the Bizarre | Paranormal Podcast",
+   "feed": "https://rss.introcast.io/1522131146/feeds.megaphone.fm/TPG4267946567",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/e1/33/89/e13389f4-e2c3-8b58-2e49-a537a4fe234c/mza_18314200060668993742.jpg/600x600bb.jpg",
    "category": "Mysteries & UFOs"
   },
   {
@@ -243,6 +259,14 @@
    "category": "News & Politics"
   },
   {
+   "id": "1567659047",
+   "title": "Distractible",
+   "author": "Distractible",
+   "feed": "https://feeds.megaphone.fm/QCD8163454930",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/c5/2f/01/c52f018c-6b86-d6d4-454f-50e2e1091898/mza_7894600928750672473.jpeg/600x600bb.jpg",
+   "category": "Comedy & Entertainment"
+  },
+  {
    "id": "1317493077",
    "title": "Duolingo Spanish Podcast",
    "author": "Duolingo",
@@ -310,6 +334,14 @@
    "feed": "https://feeds.npr.org/381444908/podcast.xml",
    "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/68/35/32/683532c0-dd91-676a-eeef-3ace951cd6e9/mza_6896198885971355473.jpg/600x600bb.jpg",
    "category": "Ideas & Culture"
+  },
+  {
+   "id": "6825036662",
+   "title": "A Full Circle Podcast",
+   "author": "Michael Shanks and David Read",
+   "feed": "https://anchor.fm/s/117091d58/podcast/rss",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/ed/03/b6/ed03b625-381c-115b-99c5-2d681d349715/mza_7717260928746180659.jpg/600x600bb.jpg",
+   "category": "Comedy & Entertainment"
   },
   {
    "id": "1438157174",
@@ -397,6 +429,14 @@
    "category": "Ideas & Culture"
   },
   {
+   "id": "1449631195",
+   "title": "The Intelligence from The Economist",
+   "author": "The Economist",
+   "feed": "https://access.acast.com/rss/d556eb54-6160-4c85-95f4-47d9f5216c49",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/ba/99/49/ba994968-d836-9172-cdbc-cc539ed3c528/mza_7373652913563230933.jpeg/600x600bb.jpg",
+   "category": "News & Politics"
+  },
+  {
    "id": "953290300",
    "title": "Invisibilia",
    "author": "NPR",
@@ -413,6 +453,14 @@
    "category": "Tech"
   },
   {
+   "id": "1283653370",
+   "title": "The Jim Jefferies Show Podcast",
+   "author": "Comedy Central",
+   "feed": "https://feeds.megaphone.fm/the-jim-jefferies-show-podcast",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/20/03/bc/2003bcbb-23fe-6a07-31be-1ca9615f6696/mza_12133830134559330636.jpeg/600x600bb.jpg",
+   "category": "Comedy & Entertainment"
+  },
+  {
    "id": "73329771",
    "title": "KCRW's Left, Right & Center",
    "author": "KCRW",
@@ -427,6 +475,14 @@
    "feed": "https://rss.pdrl.fm/4f2da0/feeds.simplecast.com/_g32XEwA",
    "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/b4/06/6d/b4066d4c-45c2-1af5-9607-2dba90299fe1/mza_3872131437839531311.jpeg/600x600bb.jpg",
    "category": "Giants"
+  },
+  {
+   "id": "1457775338",
+   "title": "Let's Get Haunted",
+   "author": "Aly & Nat | Daylight Media",
+   "feed": "https://feeds.megaphone.fm/QCD5688401368",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts112/v4/87/84/9f/87849f5c-54da-b09d-32ec-7dffd06eacf2/mza_10569389321701666008.jpg/600x600bb.jpg",
+   "category": "Mysteries & UFOs"
   },
   {
    "id": "1434243584",
@@ -594,14 +650,6 @@
    "author": "Alejandro Rojas",
    "feed": "https://www.spreaker.com/show/6161161/episodes/feed",
    "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/0d/63/91/0d6391e1-d5fa-b5f1-2570-71b78a6c61a6/mza_17306567109791080408.jpg/600x600bb.jpg",
-   "category": "Mysteries & UFOs"
-  },
-  {
-   "id": "1533675150",
-   "title": "The Other Side of Midnight with Walter Sterling",
-   "author": "Podcast WABCRadio",
-   "feed": "https://www.spreaker.com/show/7177415/episodes/feed",
-   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/81/dc/93/81dc93b1-d5ab-e7b6-1448-b59390ac143b/mza_16220435756762151982.jpg/600x600bb.jpg",
    "category": "Mysteries & UFOs"
   },
   {
@@ -849,6 +897,14 @@
    "category": "News & Politics"
   },
   {
+   "id": "1777455156",
+   "title": "Strange As It Seems",
+   "author": "Strange As It Seems",
+   "feed": "https://feed.podbean.com/strangeasitseems/feed.xml",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/cb/e1/2b/cbe12bd2-d1f1-a062-e28a-6034c99021ae/mza_2807757426112145642.jpg/600x600bb.jpg",
+   "category": "History & Legends"
+  },
+  {
    "id": "1469168641",
    "title": "Strict Scrutiny",
    "author": "Strict Scrutiny",
@@ -933,6 +989,14 @@
    }
   },
   {
+   "id": "1466851347",
+   "title": "Theories of the Third Kind",
+   "author": "Theories of the Third Kind",
+   "feed": "https://rss.amperwave.net/v2/feed/audacynetwork/dd4249ac58737027d5a68523436ceb8a",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/3c/98/a6/3c98a674-fa90-f2a3-3611-abb8efdb0ea7/mza_3074740024173182510.jpg/600x600bb.jpg",
+   "category": "Mysteries & UFOs"
+  },
+  {
    "id": "201671138",
    "title": "This American Life",
    "author": "This American Life",
@@ -967,6 +1031,14 @@
    "author": "To The Stars Inc.",
    "feed": "https://rss.buzzsprout.com/1150631.rss",
    "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/72/3d/ca/723dca05-bd5b-1d79-4d1f-1cdd8acbe020/mza_5015249319610747397.jpg/600x600bb.jpg",
+   "category": "Mysteries & UFOs"
+  },
+  {
+   "id": "1575781850",
+   "title": "UAP Unidentified Alien Podcast",
+   "author": "Gamut Podcast Network",
+   "feed": "https://rss.pdrl.fm/59663c/rss.art19.com/uap-unidentified-alien-podcast",
+   "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/85/46/0b/85460b87-87da-a462-1d27-1f8bfd738d40/mza_17424257385107162398.jpeg/600x600bb.jpg",
    "category": "Mysteries & UFOs"
   },
   {

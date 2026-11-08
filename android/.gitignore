@@ -4,3 +4,6 @@
 **/build/
 local.properties
 *.iml
+
+# The Brookstream release key (tools/export_standalone.py ships it with the shareable source; never commit it).
+keys/

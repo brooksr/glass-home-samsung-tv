@@ -34,3 +34,6 @@ node_modules/
 # (tools/audiobooks/texts.py rebuilds both; ~45 MB of public-domain text)
 tools/audiobooks/texts/
 tools/audiobooks/.cache/
+
+# Brookstream Watch list (tools/watch/build.py)
+tools/watch/out/

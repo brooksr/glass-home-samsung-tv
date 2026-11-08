@@ -15,6 +15,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -40,11 +41,13 @@ import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bedtime
+import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Forward30
 import androidx.compose.material.icons.filled.GridView
-import androidx.compose.material.icons.filled.NewReleases
+import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Newspaper
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -58,6 +61,8 @@ import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material.icons.filled.SmartDisplay
 import androidx.compose.material.icons.filled.Tv
+import androidx.compose.material.icons.filled.Timelapse
+import androidx.compose.material.icons.filled.FiberNew
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
@@ -80,6 +85,9 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.edit
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.media3.common.C
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
@@ -198,6 +206,7 @@ class Actions(
     val enqueue: (Episode) -> Unit,
     val setPlayed: (Episode, Boolean) -> Unit,
     val openShow: (String) -> Unit,
+    val openEpisode: (Episode) -> Unit,
     val watch: (Episode, Int) -> Unit,
     /** YouTube episodes opened from here. */
     val opened: Set<String> = emptySet(),
@@ -223,7 +232,15 @@ fun App(repo: Repo, news: News, controller: MediaController?) {
     var tab by rememberSaveable { mutableIntStateOf(0) }
     if (tab == 3) tab = 1   // Discover is part of Shows now
     var openShowId by rememberSaveable { mutableStateOf<String?>(null) }
+    /** An episode's page, opened from Latest or Search; a show opened from it goes on top. */
+    var openEpisodeId by rememberSaveable { mutableStateOf<String?>(null) }
+    /** Latest's scroll position, kept while an episode's page is open. */
+    val latestList = rememberLazyListState()
     var openBookId by rememberSaveable { mutableStateOf<String?>(null) }
+    /** A movie or show from the Watch tab. */
+    var openWatchId by rememberSaveable { mutableStateOf<String?>(null) }
+    /** The Bible reader, when open: "book:chapter" to open at, or "" for where it was left. */
+    var bibleAt by rememberSaveable { mutableStateOf<String?>(null) }
     var fullPlayer by rememberSaveable { mutableStateOf(false) }
     var searching by rememberSaveable { mutableStateOf(false) }
     var query by rememberSaveable { mutableStateOf("") }
@@ -232,7 +249,19 @@ fun App(repo: Repo, news: News, controller: MediaController?) {
     val prefs = ctx.getSharedPreferences("player", 0)
     val snack = remember { SnackbarHostState() }
 
-    LaunchedEffect(Unit) { repo.refresh(everything = false) }
+    val updated by repo.updated.collectAsStateWithLifecycle()
+
+    // New lists on opening, then every 15 minutes while the app is showing; the clock for "5 min ago" ticks meanwhile.
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    LaunchedEffect(lifecycle) {
+        lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            while (true) {
+                Clock.now = System.currentTimeMillis()
+                if (Clock.now - repo.lastRefresh > 15 * 60_000L) repo.refresh(everything = false)
+                delay(30_000)
+            }
+        }
+    }
 
     // The queue from last time, back in the player (not playing) once the episodes are known.
     LaunchedEffect(controller, episodes.isNotEmpty()) {
@@ -257,6 +286,9 @@ fun App(repo: Repo, news: News, controller: MediaController?) {
     }
 
     val radio = remember { (ctx.applicationContext as PodcastApp).radio }
+    val bible = remember { Bible(ctx.applicationContext) }
+    val watch = remember { (ctx.applicationContext as PodcastApp).watch }
+    val watchTitles by watch.titles.collectAsStateWithLifecycle()
 
     // A station takes the place of what's playing now, like an episode; the rest of the queue stays.
     fun playStation(st: Station) {
@@ -318,7 +350,8 @@ fun App(repo: Repo, news: News, controller: MediaController?) {
             }
         },
         setPlayed = { e, played -> repo.setPlayed(e, played) },
-        openShow = { id -> openShowId = id; openBookId = null; searching = false },
+        openShow = { id -> openShowId = id; openBookId = null },
+        openEpisode = { e -> openEpisodeId = e.id; openShowId = null; openBookId = null },
         watch = { e, start ->
             controller?.let { c -> if (c.isPlaying) c.pause() }
             repo.markOpened(e.id)
@@ -348,10 +381,13 @@ fun App(repo: Repo, news: News, controller: MediaController?) {
         }
     }
 
-    BackHandler(enabled = fullPlayer || openShowId != null || openBookId != null || searching) {
+    BackHandler(enabled = fullPlayer || bibleAt != null || openWatchId != null || openShowId != null || openEpisodeId != null || openBookId != null || searching) {
         when {
             fullPlayer -> fullPlayer = false
+            bibleAt != null -> bibleAt = null
+            openWatchId != null -> openWatchId = null
             openShowId != null -> openShowId = null
+            openEpisodeId != null -> openEpisodeId = null
             openBookId != null -> openBookId = null
             else -> { searching = false; query = "" }
         }
@@ -362,37 +398,47 @@ fun App(repo: Repo, news: News, controller: MediaController?) {
         topBar = {
             val show = openShowId?.let { repo.show(it) }
             val book = openBookId?.let { repo.book(it) }
+            val episode = openEpisodeId.takeIf { show == null }?.let { repo.episode(it) }
+            val title = openWatchId?.let { id -> watchTitles.firstOrNull { it.id == id } }
             TopAppBar(
                 title = {
                     when {
+                        bibleAt != null -> Text("Bible")
+                        title != null -> Text(title.title, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         show != null -> Text(show.title, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        episode != null -> Text(repo.show(episode.showId)?.title.orEmpty(), maxLines = 1, overflow = TextOverflow.Ellipsis)
                         book != null -> Text(book.show.title, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        searching -> SearchField(query) { query = it }
+                        searching -> SearchField(query, if (tab == 6) "Search movies, shows, actors" else "Search shows, episodes, all podcasts") { query = it }
                         else -> Image(painterResource(R.drawable.logo), "Brookstream", Modifier.size(40.dp))
                     }
                 },
                 navigationIcon = {
-                    if (show != null) IconButton(onClick = { openShowId = null }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
+                    if (bibleAt != null) IconButton(onClick = { bibleAt = null }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
+                    else if (title != null) IconButton(onClick = { openWatchId = null }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
+                    else if (show != null) IconButton(onClick = { openShowId = null }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
+                    else if (episode != null) IconButton(onClick = { openEpisodeId = null }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
                     else if (book != null) IconButton(onClick = { openBookId = null }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
                     else if (searching) IconButton(onClick = { searching = false; query = "" }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Close search") }
                 },
                 actions = {
-                    if (show == null && book == null && !searching) IconButton(onClick = { searching = true }) { Icon(Icons.Filled.Search, "Search") }
+                    if (bibleAt == null && title == null && show == null && episode == null && book == null && !searching) IconButton(onClick = { searching = true }) { Icon(Icons.Filled.Search, "Search") }
                     if (searching && query.isNotEmpty()) IconButton(onClick = { query = "" }) { Icon(Icons.Filled.Close, "Clear") }
                 },
             )
         },
         bottomBar = {
             // Without the tab bar, keep the mini player clear of the gesture bar.
-            val tabs = openShowId == null && openBookId == null && !searching
+            val tabs = bibleAt == null && openWatchId == null && openShowId == null && openEpisodeId == null && openBookId == null && !searching
             Column(if (tabs) Modifier else Modifier.navigationBarsPadding()) {
                 if (playing != null) MiniPlayer(playing, onOpen = { fullPlayer = true }, onToggle = { controller?.let { c -> if (c.isPlaying) c.pause() else resume(c, playing.live) } })
                 if (tabs) NavigationBar {
-                    NavigationBarItem(selected = tab == 0, onClick = { tab = 0 }, icon = { Icon(Icons.Filled.NewReleases, null) }, label = { Text("Latest") })
+                    NavigationBarItem(selected = tab == 0, onClick = { tab = 0 }, icon = { Icon(Icons.Filled.Schedule, null) }, label = { Text("Latest") })
                     NavigationBarItem(selected = tab == 1, onClick = { tab = 1 }, icon = { Icon(Icons.Filled.GridView, null) }, label = { Text("Shows") })
                     NavigationBarItem(selected = tab == 4, onClick = { tab = 4 }, icon = { Icon(Icons.Filled.AutoStories, null) }, label = { Text("Books") })
                     NavigationBarItem(selected = tab == 5, onClick = { tab = 5 }, icon = { Icon(Icons.Filled.Radio, null) }, label = { Text("Radio") })
                     NavigationBarItem(selected = tab == 2, onClick = { tab = 2 }, icon = { Icon(Icons.Filled.Newspaper, null) }, label = { Text("News") })
+                    // Home build only for now (the shareable one has no list to show).
+                    if (BuildConfig.HA_URL.isNotEmpty()) NavigationBarItem(selected = tab == 6, onClick = { tab = 6 }, icon = { Icon(Icons.Filled.Movie, null) }, label = { Text("Watch") })
                 }
             }
         },
@@ -400,21 +446,31 @@ fun App(repo: Repo, news: News, controller: MediaController?) {
         Box(Modifier.padding(pad).fillMaxSize()) {
             val show = openShowId?.let { repo.show(it) }
             val book = openBookId?.let { repo.book(it) }
+            val episode = openEpisodeId.takeIf { show == null }?.let { id -> episodes.values.firstNotNullOfOrNull { l -> l.firstOrNull { it.id == id } } ?: repo.episode(id) }
             when {
-                book != null && show == null -> BookScreen(book, repo.hasText(book), progress, playing?.id, actions, ::playBook)
+                openWatchId != null && watchTitles.any { it.id == openWatchId } -> TitleScreen(watch, watchTitles.first { it.id == openWatchId })
+                tab == 6 -> WatchScreen(watch, if (searching) query else "") { openWatchId = it.id }
+                bibleAt != null -> BibleScreen(bible, bibleAt?.split(":")?.takeIf { it.size == 2 }?.let { (b, c) -> b.toInt() to c.toInt() })
+                book != null && show == null -> BookScreen(book, repo.hasText(book), progress, playing?.id, actions, ::playBook,
+                    read = if (book.show.category == "Bible" && bible.available) ({
+                        // The text of the part you're on (or the first).
+                        val ref = bible.refOf(book.chapters[resumeAt(book, progress) ?: 0].title)
+                        bibleAt = ref?.let { "${it.first}:${it.second}" } ?: ""
+                    }) else null)
+                episode != null -> EpisodeScreen(repo, episode, progress[episode.id], episode.id == playing?.id, actions)
                 show != null -> ShowScreen(repo, show, shows.any { it.id == show.id }, episodes[show.id].orEmpty(), progress, playing?.id, prefs, actions, ::unsubscribe)
                 searching -> SearchResults(repo, query, shows, episodes, progress, playing?.id, actions,
                     open = { s -> repo.preview(s); openShowId = s.id }, unsubscribe = ::unsubscribe)
                 tab == 2 -> NewsScreen(news)
-                tab == 4 -> BooksScreen(repo.books, progress) { openBookId = it.id }
+                tab == 4 -> BooksScreen(repo.books, progress, readBible = if (bible.available) ({ bibleAt = "" }) else null) { openBookId = it.id }
                 tab == 5 -> RadioScreen(radio, playing?.id, playing?.playing == true, ::playStation)
                 else -> PullToRefreshBox(isRefreshing = refreshing, onRefresh = { scope.launch { repo.refresh(everything = true) } }) {
-                    // Shows also offers For you and Top charts among its categories; Latest has only the real ones.
-                    val cat = category.takeIf { tab == 1 || it !in DISCOVER }
+                    // Shows also offers For you and Top charts among its categories; Latest offers In Progress, New and Complete.
+                    val cat = category.takeIf { if (tab == 1) it !in STATUS else it !in DISCOVER }
                     Column {
-                        CategoryChips(shows, cat, extra = if (tab == 1) DISCOVER else emptyList()) { category = it }
+                        CategoryChips(shows, cat, extra = if (tab == 1) DISCOVER else STATUS) { category = it }
                         when {
-                            tab == 0 -> LatestScreen(shows, episodes, progress, status, playing?.id, cat, actions)
+                            tab == 0 -> LatestScreen(shows, episodes, progress, status, updated, playing?.id, cat, actions, latestList)
                             cat in DISCOVER -> DiscoverList(repo, shows, charts = cat == TOP,
                                 open = { s -> repo.preview(s); openShowId = s.id }, unsubscribe = ::unsubscribe)
                             else -> ShowsGrid(shows, cat, open = { openShowId = it.id }, unsubscribe = ::unsubscribe)
@@ -435,10 +491,10 @@ fun App(repo: Repo, news: News, controller: MediaController?) {
 }
 
 @Composable
-fun SearchField(query: String, onChange: (String) -> Unit) {
+fun SearchField(query: String, hint: String = "Search shows, episodes, all podcasts", onChange: (String) -> Unit) {
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) { focus.requestFocus() }
-    TextField(query, onChange, Modifier.fillMaxWidth().focusRequester(focus), placeholder = { Text("Search shows, episodes, all podcasts") }, singleLine = true,
+    TextField(query, onChange, Modifier.fillMaxWidth().focusRequester(focus), placeholder = { Text(hint) }, singleLine = true,
         colors = TextFieldDefaults.colors(focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent,
             focusedIndicatorColor = Color.Transparent, unfocusedIndicatorColor = Color.Transparent))
 }
@@ -452,33 +508,51 @@ fun CategoryChips(shows: List<Show>, selected: String?, extra: List<String> = em
         FilterChip(selected == null, { onSelect(null) }, { Text("All") })
         extra.forEach { c ->
             FilterChip(selected == c, { onSelect(if (selected == c) null else c) }, { Text(c) },
-                leadingIcon = { Icon(if (c == TOP) Icons.AutoMirrored.Filled.TrendingUp else Icons.Filled.AutoAwesome, null, Modifier.size(16.dp)) })
+                leadingIcon = { Icon(chipIcon(c), null, Modifier.size(16.dp)) })
         }
         cats.forEach { c -> FilterChip(selected == c, { onSelect(if (selected == c) null else c) }, { Text(c) }) }
     }
 }
 
+private fun chipIcon(c: String) = when (c) {
+    TOP -> Icons.AutoMirrored.Filled.TrendingUp
+    IN_PROGRESS -> Icons.Filled.Timelapse
+    NEW -> Icons.Filled.FiberNew
+    COMPLETE -> Icons.Filled.CheckCircle
+    else -> Icons.Filled.AutoAwesome
+}
+
+/** Latest, newest first; played and half-played episodes stay in their place. [category] may be a show category or one of [STATUS]. */
 @Composable
 fun LatestScreen(shows: List<Show>, episodes: Map<String, List<Episode>>, progress: Map<String, Progress>,
-                 status: String, current: String?, category: String?, actions: Actions) {
+                 status: String, updated: Long, current: String?, category: String?, actions: Actions, listState: androidx.compose.foundation.lazy.LazyListState = rememberLazyListState()) {
     val showById = remember(shows) { shows.associateBy { it.id } }
     val byId = remember(episodes, showById) { episodes.filterKeys { it in showById }.values.flatten().associateBy { it.id } }
-    fun keep(e: Episode) = e.showId in showById && (category == null || showById[e.showId]?.category == category)
-    val cont = remember(progress, byId, category) {
-        progress.entries.filter { !it.value.done && it.value.t > 0 && it.key in byId }
-            .sortedByDescending { it.value.at }.mapNotNull { byId[it.key] }.filter(::keep).take(10)
+    val state = category.takeIf { it in STATUS }
+    val cat = category.takeIf { it !in STATUS }
+    fun started(e: Episode) = progress[e.id].let { it != null && !it.done && it.t > 0 }
+    fun keep(e: Episode) = e.showId in showById && (cat == null || showById[e.showId]?.category == cat) && when (state) {
+        IN_PROGRESS -> started(e)
+        NEW -> progress[e.id].let { it == null || (!it.done && it.t == 0) } && e.id !in actions.opened
+        COMPLETE -> progress[e.id]?.done == true
+        else -> true
     }
-    val latest = remember(episodes, progress, category, showById) {
-        episodes.values.flatMap { list -> list.filter { !it.youtubeOnly }.take(3) + list.filter { it.youtubeOnly }.take(2) }.filter { progress[it.id]?.done != true && keep(it) }.sortedByDescending { it.date }.take(60)
+    val latest = remember(episodes, progress, category, showById, actions.opened) {
+        val newest = episodes.values.flatMap { list -> list.filter { !it.youtubeOnly }.take(3) + list.filter { it.youtubeOnly }.take(2) }
+        // In Progress and Complete look through every loaded episode; any half-played one also joins the rest in date order.
+        val pool = if (state == IN_PROGRESS || state == COMPLETE) byId.values else newest + byId.values.filter(::started)
+        pool.distinctBy { it.id }.filter(::keep).sortedByDescending { it.date }.take(if (state == null) 60 else 100)
     }
-    LazyColumn(Modifier.fillMaxSize()) {
+    LazyColumn(Modifier.fillMaxSize(), state = listState) {
         if (status.isNotEmpty()) item { Text(status, Modifier.padding(16.dp, 8.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-        if (cont.isNotEmpty()) {
-            item { Header("Continue") }
-            items(cont, key = { "c" + it.id }) { e -> EpisodeRow(e, showById[e.showId], progress[e.id], e.id == current, actions) }
+        item {
+            Row(verticalAlignment = Alignment.Bottom) {
+                Header(state ?: "Latest")
+                if (updated > 0) Text("Updated " + ago(updated).replace("Just now", "just now").replace("Yesterday", "yesterday"), Modifier.padding(bottom = 5.dp), style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
         }
-        item { Header("Latest") }
-        if (latest.isEmpty()) item { Text("Nothing here. Pull down to refresh.", Modifier.padding(16.dp)) }
+        if (latest.isEmpty()) item { Text(if (state == null) "Nothing here. Pull down to refresh." else "Nothing here.", Modifier.padding(16.dp)) }
         items(latest, key = { "l" + it.id }) { e -> EpisodeRow(e, showById[e.showId], progress[e.id], e.id == current, actions) }
     }
 }
@@ -604,35 +678,46 @@ fun ShowScreen(repo: Repo, show: Show, subscribed: Boolean, eps: List<Episode>, 
         }
         if (loading && eps.size <= 3) item { LinearProgressIndicator(Modifier.fillMaxWidth().padding(16.dp)) }
         if (!loading && eps.isEmpty()) item { Text("Couldn't load this show's episodes.", Modifier.padding(16.dp)) }
-        items(list, key = { it.id }) { e -> EpisodeRow(e, null, progress[e.id], e.id == current, actions, showDesc = true) }
+        items(list, key = { it.id }) { e -> EpisodeRow(e, null, progress[e.id], e.id == current, actions) }
     }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun EpisodeRow(e: Episode, show: Show?, p: Progress?, current: Boolean, actions: Actions, showDesc: Boolean = false) {
+fun EpisodeRow(e: Episode, show: Show?, p: Progress?, current: Boolean, actions: Actions) {
     var menu by remember { mutableStateOf(false) }
     val opened = e.id in actions.opened
     Box {
-        Row(Modifier.fillMaxWidth().combinedClickable(onClick = { actions.play(e) }, onLongClick = { menu = true })
+        // In a list of many shows a tap opens the episode's page; on the show's own page it plays.
+        Row(Modifier.fillMaxWidth().combinedClickable(onClick = { if (show != null) actions.openEpisode(e) else actions.play(e) }, onLongClick = { menu = true })
             .background(if (current) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent)
             .padding(horizontal = 16.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-            if (show != null) Art(show.art, Modifier.size(56.dp).padding(end = 12.dp))
+            if (show != null) Art(show.art, Modifier.size(68.dp).padding(end = 12.dp))
             Column(Modifier.weight(1f)) {
                 Text(e.title, style = MaterialTheme.typography.bodyLarge, maxLines = 2, overflow = TextOverflow.Ellipsis,
                     color = if (p?.done == true || opened) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface)
-                val bits = listOfNotNull(show?.title, ago(e.date).takeIf { e.date > 0 },
+                // Show name (bold, cut short when long) and tags on the left; date and length always whole on the right.
+                val stamp = listOfNotNull(ago(e.date).takeIf { e.date > 0 },
                     when {
                         p?.done == true -> "Played"
                         p != null && p.t > 0 && p.dur > 0 -> "${mins(p.dur - p.t)} left"
                         e.duration > 0 -> mins(e.duration)
                         else -> null
-                    },
-                    "Transcript".takeIf { e.transcriptUrl.isNotEmpty() },
-                    "▶ YouTube".takeIf { e.youtubeOnly }, "Video".takeIf { !e.youtubeOnly && e.videoId.isNotEmpty() },
-                    "Opened".takeIf { opened && e.youtubeOnly && p?.done != true })
-                Text(bits.joinToString(" · "), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                if (showDesc && e.desc.isNotEmpty()) Text(e.desc, Modifier.padding(top = 2.dp), style = MaterialTheme.typography.bodySmall,
+                    })
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                        if (show != null) Text(show.title, Modifier.weight(1f, fill = false), style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        if (e.youtubeOnly) Image(painterResource(R.drawable.youtube), "YouTube", Modifier.size(17.dp, 12.dp))
+                        if (!e.youtubeOnly && e.videoId.isNotEmpty()) Tag("Video")
+                        if (e.transcriptUrl.isNotEmpty()) Tag("Transcript")
+                        if (opened && e.youtubeOnly && p?.done != true) Text("Opened", style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, softWrap = false)
+                    }
+                    Text(stamp.joinToString(" · "), Modifier.padding(start = 8.dp), style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, softWrap = false)
+                }
+                if (e.desc.isNotEmpty()) Text(e.desc, Modifier.padding(top = 2.dp), style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 if (p != null && !p.done && p.t > 0) LinearProgressIndicator(progress = { p.fraction }, modifier = Modifier.fillMaxWidth().padding(top = 6.dp).height(3.dp),
                     drawStopIndicator = {})
@@ -640,6 +725,7 @@ fun EpisodeRow(e: Episode, show: Show?, p: Progress?, current: Boolean, actions:
             if (p?.done == true) Icon(Icons.Filled.CheckCircle, "Played", Modifier.padding(start = 8.dp).size(20.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+            if (show != null && !e.youtubeOnly) DropdownMenuItem(text = { Text("Play") }, onClick = { actions.play(e); menu = false })
             if (e.videoId.isNotEmpty()) DropdownMenuItem(text = { Text("Watch on YouTube") },
                 onClick = { actions.watch(e, if (p != null && !p.done) p.t else 0); menu = false })
             if (!e.youtubeOnly) {
@@ -652,6 +738,73 @@ fun EpisodeRow(e: Episode, show: Show?, p: Progress?, current: Boolean, actions:
         }
     }
 }
+
+/** One episode: what it is, its whole description, and Play. */
+@Composable
+fun EpisodeScreen(repo: Repo, e: Episode, p: Progress?, current: Boolean, actions: Actions) {
+    val show = repo.show(e.showId)
+    // The lists carry a short description; the show's own file has the longer one.
+    LaunchedEffect(e.id) { if (show != null) runCatching { repo.loadShow(show) } }
+    val started = p != null && !p.done && p.t > 0
+    LazyColumn(Modifier.fillMaxSize()) {
+        item {
+            Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                Art(show?.art, Modifier.size(96.dp))
+                Column(Modifier.padding(start = 16.dp)) {
+                    if (show != null) Text(show.title, Modifier.clickable { actions.openShow(show.id) }, style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    val stamp = listOfNotNull(ago(e.date).takeIf { e.date > 0 }, mins(e.duration).takeIf { e.duration > 0 })
+                    Text(stamp.joinToString(" · "), Modifier.padding(top = 4.dp), style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Row(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                        if (e.youtubeOnly) Image(painterResource(R.drawable.youtube), "YouTube", Modifier.size(17.dp, 12.dp))
+                        if (!e.youtubeOnly && e.videoId.isNotEmpty()) Tag("Video")
+                        if (e.transcriptUrl.isNotEmpty()) Tag("Transcript")
+                    }
+                }
+            }
+        }
+        item { Text(e.title, Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.titleLarge) }
+        item {
+            Row(Modifier.padding(16.dp, 12.dp, 16.dp, 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                if (e.youtubeOnly) Button(onClick = { actions.watch(e, 0) }) { Text("Watch on YouTube") }
+                else Button(onClick = { actions.play(e) }) {
+                    Icon(Icons.Filled.PlayArrow, null, Modifier.size(20.dp)); Spacer(Modifier.width(6.dp))
+                    Text(when {
+                        current -> "Playing"
+                        started && p!!.dur > 0 -> "Resume · ${mins(p.dur - p.t)} left"
+                        started -> "Resume"
+                        else -> "Play"
+                    })
+                }
+                if (!e.youtubeOnly && e.videoId.isNotEmpty()) OutlinedButton(onClick = { actions.watch(e, if (started) p!!.t else 0) }) { Text("Watch") }
+                OutlinedButton(onClick = { actions.setPlayed(e, p?.done != true) }) {
+                    if (p?.done == true) { Icon(Icons.Filled.CheckCircle, null, Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)) }
+                    Text(if (p?.done == true) "Played" else "Mark played")
+                }
+            }
+        }
+        if (!e.youtubeOnly) item {
+            Row(Modifier.padding(horizontal = 8.dp)) {
+                TextButton(onClick = { actions.playNext(e) }) { Text("Play next") }
+                TextButton(onClick = { actions.enqueue(e) }) { Text("Add to Up next") }
+            }
+        }
+        if (started) item {
+            LinearProgressIndicator(progress = { p!!.fraction }, modifier = Modifier.fillMaxWidth().padding(16.dp, 4.dp).height(4.dp), drawStopIndicator = {})
+        }
+        if (e.desc.isNotEmpty()) item {
+            Text(e.desc, Modifier.padding(16.dp), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+/** A small outlined label in capitals, so it reads as a tag and not part of the show's name. */
+@Composable
+fun Tag(text: String) = Text(text.uppercase(),
+    Modifier.border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(4.dp)).padding(horizontal = 4.dp),
+    style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold, letterSpacing = 0.6.sp,
+    color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, softWrap = false)
 
 @Composable
 fun Art(url: String?, modifier: Modifier) {
@@ -666,6 +819,10 @@ fun Art(url: String?, modifier: Modifier) {
 const val FOR_YOU = "For you"
 const val TOP = "Top charts"
 val DISCOVER = listOf(FOR_YOU, TOP)
+const val IN_PROGRESS = "In Progress"
+const val NEW = "New"
+const val COMPLETE = "Complete"
+val STATUS = listOf(IN_PROGRESS, NEW, COMPLETE)
 
 /** Discover's lists, kept while the app is open. */
 private var forYouCache: List<Show>? = null
@@ -748,11 +905,11 @@ fun resumeAt(b: Book, progress: Map<String, Progress>): Int? {
     return if (progress[b.chapters[last].id]!!.done) (last + 1).takeIf { it < b.chapters.size } else last
 }
 
-private val SHELVES = listOf("Great Novels", "Adventure & Mystery", "Science Fiction & Horror", "Philosophy & Ideas", "History & Lives",
+private val SHELVES = listOf("Bible", "Great Novels", "Adventure & Mystery", "Science Fiction & Horror", "Philosophy & Ideas", "History & Lives",
     "Poetry & Drama", "Children's Classics")
 
 @Composable
-fun BooksScreen(books: List<Book>, progress: Map<String, Progress>, open: (Book) -> Unit) {
+fun BooksScreen(books: List<Book>, progress: Map<String, Progress>, readBible: (() -> Unit)? = null, open: (Book) -> Unit) {
     var shelf by rememberSaveable { mutableStateOf<String?>(null) }
     val shelves = remember(books) { books.map { it.show.category }.distinct().sortedBy { SHELVES.indexOf(it).let { i -> if (i < 0) 99 else i } } }
     val fractions = remember(books, progress) { books.associate { it.id to bookFraction(it, progress) } }
@@ -774,6 +931,18 @@ fun BooksScreen(books: List<Book>, progress: Map<String, Progress>, open: (Book)
         }
         shelves.filter { shelf == null || it == shelf }.forEach { sh ->
             if (shelf == null) item(key = "h$sh", span = { GridItemSpan(maxLineSpan) }) { ShelfHeader(sh) }
+            if (sh == "Bible" && readBible != null) item(key = "read", span = { GridItemSpan(maxLineSpan) }) {
+                OutlinedCard(onClick = readBible, Modifier.fillMaxWidth()) {
+                    Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.AutoMirrored.Filled.MenuBook, null, Modifier.size(32.dp), tint = MaterialTheme.colorScheme.primary)
+                        Column(Modifier.padding(start = 14.dp)) {
+                            Text("Read the Bible", style = MaterialTheme.typography.titleMedium)
+                            Text("Berean, KJV, WEB, ASV and Young's, the Hebrew and Greek, and links to NIV, ESV and more",
+                                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                }
+            }
             items(books.filter { it.show.category == sh }, key = { it.id }) { b -> BookCard(b, fractions[b.id] ?: 0f) { open(b) } }
         }
         item(key = "credit", span = { GridItemSpan(maxLineSpan) }) {
@@ -801,7 +970,8 @@ fun BookCard(b: Book, fraction: Float, open: () -> Unit) {
 fun hours(sec: Int) = if (sec >= 3600) "${(sec + 1800) / 3600} h" else mins(sec)
 
 @Composable
-fun BookScreen(b: Book, hasText: Boolean, progress: Map<String, Progress>, current: String?, actions: Actions, play: (Book, Int) -> Unit) {
+fun BookScreen(b: Book, hasText: Boolean, progress: Map<String, Progress>, current: String?, actions: Actions, play: (Book, Int) -> Unit,
+               read: (() -> Unit)? = null) {
     val fraction = bookFraction(b, progress)
     val resume = resumeAt(b, progress)
     var more by remember(b.id) { mutableStateOf(false) }
@@ -828,6 +998,10 @@ fun BookScreen(b: Book, hasText: Boolean, progress: Map<String, Progress>, curre
                 Button(onClick = { play(b, resume ?: 0) }, Modifier.fillMaxWidth()) {
                     Icon(Icons.Filled.PlayArrow, null, Modifier.size(20.dp)); Spacer(Modifier.width(6.dp))
                     Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+                if (read != null) OutlinedButton(onClick = read, Modifier.fillMaxWidth().padding(top = 8.dp)) {
+                    Icon(Icons.AutoMirrored.Filled.MenuBook, null, Modifier.size(20.dp)); Spacer(Modifier.width(6.dp))
+                    Text("Read the text")
                 }
                 if (fraction > 0f) {
                     LinearProgressIndicator(progress = { fraction }, modifier = Modifier.fillMaxWidth().padding(top = 10.dp).height(4.dp), drawStopIndicator = {})
@@ -928,7 +1102,7 @@ fun RadioScreen(radio: Radio, current: String?, playing: Boolean, play: (Station
         }
         if (loading) LinearProgressIndicator(Modifier.fillMaxWidth().padding(top = 4.dp))
         LazyColumn(Modifier.fillMaxSize()) {
-            if (q.length < 2 && shelf == "Local") item { Hint("Stations within about 150 km of home, most played first.") }
+            if (q.length < 2 && shelf == "Local") item { Hint("Stations within about 150 km of ${BuildConfig.PLACE}, most played first.") }
             if (q.length < 2 && shelf == "SomaFM") item { Hint("Listener-supported, commercial-free channels from San Francisco.") }
             if (failed) item { Hint("Couldn't reach the station directory. Pull down or try again in a moment.") }
             if (!loading && !failed && list?.isEmpty() == true) item { Hint(if (q.length >= 2) "No stations found for “$q”." else "Nothing here yet.") }
@@ -1080,11 +1254,7 @@ fun FullPlayer(repo: Repo, p: Playing, c: MediaController, onSpeed: (Float) -> U
                 enabled = chapterNow + 1 < chapters.size && chapters.isNotEmpty()) { Icon(Icons.Filled.SkipNext, "Next chapter") }
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-            TextButton(onClick = {
-                val next = SPEEDS[(SPEEDS.indexOf(p.speed).coerceAtLeast(0) + 1) % SPEEDS.size]
-                c.setPlaybackSpeed(next)
-                onSpeed(next)
-            }) { Text("Speed ${speedLabel(p.speed)}", fontSize = 15.sp) }
+            SpeedButton(p.speed) { next -> c.setPlaybackSpeed(next); onSpeed(next) }
             // Hands this episode (and Up next) to Roche Home on the TV, and pauses here.
             if (repo.canCast && episode != null && !episode.youtubeOnly) TextButton(enabled = !casting, onClick = {
                 casting = true
@@ -1132,6 +1302,27 @@ fun FullPlayer(repo: Repo, p: Playing, c: MediaController, onSpeed: (Float) -> U
 }
 
 /** The sleep timer: off, 15–60 minutes, or the end of the episode. */
+/** A tap steps to the next speed; a long press lists them all. */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun SpeedButton(speed: Float, set: (Float) -> Unit) {
+    var menu by remember { mutableStateOf(false) }
+    Box {
+        Text("Speed ${speedLabel(speed)}",
+            Modifier.padding(vertical = 4.dp).clip(RoundedCornerShape(20.dp))
+                .combinedClickable(onClick = { set(SPEEDS[(SPEEDS.indexOf(speed).coerceAtLeast(0) + 1) % SPEEDS.size]) }, onLongClick = { menu = true })
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+            color = MaterialTheme.colorScheme.primary, fontSize = 15.sp, style = MaterialTheme.typography.labelLarge)
+        DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+            SPEEDS.sorted().forEach { sp ->
+                DropdownMenuItem(text = { Text(speedLabel(sp), fontWeight = if (sp == speed) FontWeight.Bold else null) },
+                    trailingIcon = { if (sp == speed) Icon(Icons.Filled.CheckCircle, null, Modifier.size(18.dp)) },
+                    onClick = { set(sp); menu = false })
+            }
+        }
+    }
+}
+
 @Composable
 fun SleepButton() {
     val until by Sleep.until.collectAsStateWithLifecycle()
@@ -1146,7 +1337,7 @@ fun SleepButton() {
             Text(when {
                 until > 0 -> "Sleep in " + mins(((until - now) / 1000).toInt().coerceAtLeast(0))
                 endOfEpisode -> "Sleep at end"
-                else -> "Sleep timer"
+                else -> "Timer"
             }, fontSize = 15.sp)
         }
         DropdownMenu(expanded = sleepMenu, onDismissRequest = { sleepMenu = false }) {
@@ -1231,8 +1422,20 @@ fun clock(ms: Long): String {
     return if (s >= 3600) "%d:%02d:%02d".format(s / 3600, s % 3600 / 60, s % 60) else "%d:%02d".format(s / 60, s % 60)
 }
 
-fun ago(unix: Long): String = DateUtils.getRelativeTimeSpanString(unix * 1000, System.currentTimeMillis(), DateUtils.DAY_IN_MILLIS,
-    DateUtils.FORMAT_ABBREV_RELATIVE or DateUtils.FORMAT_ABBREV_MONTH).toString()
+/** The time now for "… ago", ticked by [App] every 30 s so those labels stay current. */
+object Clock { var now by mutableLongStateOf(System.currentTimeMillis()) }
+
+/** "12 min ago" and "5 h ago" within a day; "Yesterday", "3 days ago", "Oct 12" after that. */
+fun ago(unix: Long): String {
+    val ms = Clock.now - unix * 1000
+    return when {
+        ms < 60_000 -> "Just now"
+        ms < 3_600_000 -> "${ms / 60_000} min ago"
+        ms < 86_400_000 -> "${ms / 3_600_000} h ago"
+        else -> DateUtils.getRelativeTimeSpanString(unix * 1000, Clock.now, DateUtils.DAY_IN_MILLIS,
+            DateUtils.FORMAT_ABBREV_RELATIVE or DateUtils.FORMAT_ABBREV_MONTH).toString()
+    }
+}
 
 // ---------- news ----------
 

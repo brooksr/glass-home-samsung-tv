@@ -45,6 +45,7 @@ EXTRAS = 10         # newest episodes per show given an extras/<id>.json for the
 KEEP = 100          # episodes per show file
 LATEST = 3          # episodes per show in podcasts.json
 DESC = 600          # characters of episode description kept
+ROW_DESC = 200      # ...and in podcasts.json's rows (two lines on the phone)
 
 
 def fetch(url, timeout=30):
@@ -431,9 +432,10 @@ def main():
             'art': 'art/' + show['id'] + '.jpg' if has_art else '',
             'newest': eps[0]['d'] if eps else 0,
             'count': len(eps),
-            # Shorter copies for the rows: no description.
+            # Shorter copies for the rows: the description cut to about two lines.
             # The 3 newest episodes and the 2 newest YouTube-only videos.
-            'eps': [{k: e[k] for k in ('id', 't', 'd', 's', 'u', 'c', 'tr', 'tt', 'e', 'v', 'yt') if k in e}
+            'eps': [dict({k: e[k] for k in ('id', 't', 'd', 's', 'u', 'c', 'tr', 'tt', 'e', 'v', 'yt') if k in e},
+                         **({'x': e['x'][:ROW_DESC]} if e.get('x') else {}))
                     for e in [x for x in eps if not x.get('yt')][:LATEST] + [x for x in eps if x.get('yt')][:2]],
         })
     write_json(os.path.join(out, 'podcasts.json'), {'updated': int(time.time()), 'shows': index})

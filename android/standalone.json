@@ -1,0 +1,51 @@
+{
+  "_note": "Only for the shareable build (./gradlew assembleRelease -Pstandalone), which has no Home Assistant. The Radio tab's Local stations are around this place; these shows and News feeds are left out (partisan left politics, and home-area local news) and addShows added; books from tools/audiobooks/audiobooks-standalone.json are added (build.py --standalone).",
+  "place": "Somerset, CA",
+  "latitude": "38.6477",
+  "longitude": "-120.6866",
+  "dropShows": {
+    "1462195742": "The Al Franken Podcast",
+    "1314170606": "All In with Chris Hayes",
+    "1447684472": "The Bulwark Daily",
+    "1258545975": "Citations Needed",
+    "402050558": "The David Pakman Show",
+    "1354611827": "Deconstructed",
+    "1548604447": "The Ezra Klein Show",
+    "1467297559": "Hacks On Tap",
+    "839139321": "I Doubt It Podcast",
+    "1651876897": "If Books Could Kill",
+    "1216346463": "Lovett or Leave It",
+    "1647085571": "The Next Level",
+    "1610392666": "Offline with Jon Favreau",
+    "1192761536": "Pod Save America",
+    "1200016351": "Pod Save the World",
+    "294055449": "The Rachel Maddow Show",
+    "1408796715": "Runaway Country with Alex Wagner",
+    "1265845136": "Stay Tuned with Preet",
+    "6804845033": "Still Counting",
+    "1469168641": "Strict Scrutiny",
+    "1474001390": "TRUE ANON TRUTH FEED",
+    "1512034515": "Santa Barbara Talks with Josh Molina"
+  },
+  "dropNews": [
+    "NYT Opinion",
+    "Vox",
+    "The Bulwark",
+    "The Intercept",
+    "Crooked Media"
+  ],
+  "addShows": [
+    {
+      "id": "1482179882",
+      "title": "The Mona Charen Show",
+      "author": "The Bulwark",
+      "feed": "https://audioboom.com/channels/5114288.rss",
+      "art": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/e0/d5/a7/e0d5a7d1-ffbe-3688-480d-04bba54453ca/mza_3607816038604646491.jpg/600x600bb.jpg",
+      "category": "News & Politics"
+    }
+  ],
+  "dropNewsCategories": [
+    "Conejo Valley",
+    "Santa Barbara"
+  ]
+}

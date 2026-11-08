@@ -5,7 +5,7 @@ Android app (`android/`).
 
 - `export.txt`: the subscriptions export this list was made from (shows,
   publishers and hosts mixed together).
-- `sources.json`: the 110 shows, each with Apple's collection ID (`id`), feed
+- `sources.json`: the 119 shows, each with Apple's collection ID (`id`), feed
   URL, cover art and `category` (chosen by hand: Apple's genres put Coast to
   Coast AM under Science). `"id3chapters": true` marks the shows whose MP3s
   carry chapters (Decoding the Gurus, Lex Fridman, ShopTalk, Web Rush); found
@@ -24,7 +24,7 @@ Android app (`android/`).
   episodes with nothing, or whose host refused (MonsterTalk's transcript host
   answers 403). Transcripts are only ever the
   show's own; nothing is transcribed here. Standard
-  library only; about 30 s for all 110.
+  library only; about 30 s for all 119.
 
 - YouTube: `"youtube": {"channel", "handle", "only"}` on 26 shows. Each
   channel was checked by matching its recent videos to the show's episodes;
@@ -73,11 +73,11 @@ playlist", "Episodes for Later", "Season 2", the single Jonathan Reed
 episode) aren't podcasts. Not found in Apple's directory, so add their feed
 URLs by hand if you want them: Skullduggery (Yahoo News), The Adam Savage
 Project, The alientheorists's Podcast, The Bulwark Podcast, GIANTS POSTCASTS,
-Economist Podcasts, Here's the Deal, The Free Press (its shows besides
+Here's the Deal, The Free Press (its shows besides
 Conversations with Coleman), Seaquence and itmeJP's other shows. Picked by
 judgment where the name was ambiguous: Locked On Giants (San Francisco),
 PSIcoactivo (KGRA), Open Minds UAP News (the current name of Open Minds UFO
-Radio), The Other Side of Midnight with Walter Sterling.
+Radio), The Intelligence from The Economist (Spotify's "Economist Podcasts" feed).
 
 Paid feeds (Audible, members-only Making Sense, Hardcore History back
 catalogue, The Free Press) are the free public versions; a private feed URL

@@ -118,6 +118,13 @@ class Repo(private val context: Context) {
     /** Episodes opened in YouTube from here (YouTube doesn't say how far you watched). */
     val opened: StateFlow<Set<String>> = _opened.asStateFlow()
 
+    private val _updated = MutableStateFlow(0L)
+    /** When the episode lists were last checked against the feeds (unix seconds; Home Assistant's build time), 0 if unknown. */
+    val updated: StateFlow<Long> = _updated.asStateFlow()
+    /** When this phone last asked for new lists (ms), for the automatic refresh. */
+    @Volatile var lastRefresh = 0L
+        private set
+
     private val _refreshing = MutableStateFlow(false)
     val refreshing: StateFlow<Boolean> = _refreshing.asStateFlow()
 
@@ -247,8 +254,13 @@ class Repo(private val context: Context) {
             shows += Show(id, s.optString("title"), s.optString("author"), s.optString("feed"), art, s.optLong("newest"),
                 s.optString("category").ifEmpty { "Other" }, s.optBoolean("id3chapters"))
             val list = s.optJSONArray("eps")
-            if (list != null && id !in fullyLoaded) eps[id] = parseEps(id, list)
+            if (list != null && id !in fullyLoaded) {
+                // Rows without a description keep the one already known (from the show's full list).
+                val known = eps[id].orEmpty().associateBy { it.id }
+                eps[id] = parseEps(id, list).map { e -> if (e.desc.isEmpty()) e.copy(desc = known[e.id]?.desc.orEmpty()) else e }
+            }
         }
+        j.optLong("updated").takeIf { it > 0 }?.let { _updated.value = it }
         homeShows = shows
         _episodes.value = eps
         publishShows()
@@ -303,6 +315,7 @@ class Repo(private val context: Context) {
      */
     suspend fun refresh(everything: Boolean) = withContext(Dispatchers.IO) {
         _refreshing.value = true
+        lastRefresh = System.currentTimeMillis()
         try {
             val idx = listBase?.let { httpText(it + "podcasts.json", 5000) }
             val json = idx?.let { runCatching { JSONObject(it) }.getOrNull() }
@@ -311,13 +324,15 @@ class Repo(private val context: Context) {
                 fullyLoaded.clear()
                 applyIndex(json)
                 _status.value = ""
-            } else if (everything) {
+            } else if (everything || (listBase == null && System.currentTimeMillis() / 1000 - _updated.value > 30 * 60)) {
+                // Without Home Assistant (the shareable build) every feed is read here: on opening, then every half hour.
                 val sem = Semaphore(8)
                 coroutineScope {
                     _shows.value.map { s -> async { sem.withPermit { fromFeed(s) } } }.awaitAll()
                 }
+                _updated.value = System.currentTimeMillis() / 1000
                 _status.value = ""
-            } else {
+            } else if (listBase != null) {
                 _status.value = "Away from home: pull down to check every feed."
             }
             refreshAdded(everything)
