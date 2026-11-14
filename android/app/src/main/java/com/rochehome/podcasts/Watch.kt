@@ -245,7 +245,7 @@ private val SORTS = listOf("Popular", "IMDb rating", "Newest")
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WatchScreen(watch: Watch, query: String, open: (Title) -> Unit) {
+fun WatchScreen(watch: Watch, query: String, list: androidx.compose.foundation.lazy.LazyListState = rememberLazyListState(), open: (Title) -> Unit) {
     val scope = rememberCoroutineScope()
     val titles by watch.titles.collectAsStateWithLifecycle()
     val saved by watch.saved.collectAsStateWithLifecycle()
@@ -256,9 +256,14 @@ fun WatchScreen(watch: Watch, query: String, open: (Title) -> Unit) {
     var kind by rememberSaveable { mutableStateOf<String?>(null) }
     var genre by rememberSaveable { mutableStateOf<String?>(null) }
     var sort by rememberSaveable { mutableStateOf(SORTS[0]) }
-    val list = rememberLazyListState()
     LaunchedEffect(Unit) { watch.refresh(force = false) }
-    LaunchedEffect(service, kind, genre, sort, query) { list.scrollToItem(0) }
+    // To the top when a filter changes, but not on coming back to the tab (its place is kept).
+    var filters by rememberSaveable { mutableStateOf("") }
+    LaunchedEffect(service, kind, genre, sort, query) {
+        val now = listOf(service, kind, genre, sort, query).joinToString("|")
+        if (filters.isNotEmpty() && filters != now) list.scrollToItem(0)
+        filters = now
+    }
 
     val genres = remember(titles) { titles.flatMap { it.genres }.groupingBy { it }.eachCount().entries.sortedByDescending { it.value }.map { it.key } }
     val shown = remember(titles, saved, service, kind, genre, sort, query) {

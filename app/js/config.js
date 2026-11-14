@@ -134,7 +134,9 @@
       base: haLocal && haLocal + 'podcasts/',
       syncEntity: 'sensor.roche_podcasts',
       // What the Android app casts to the TV (its Play on TV button).
-      castEntity: 'sensor.roche_podcasts_cast'
+      castEntity: 'sensor.roche_podcasts_cast',
+      // Where the apps report skipped stretches, for tools/podcasts/adfree.py.
+      skipsEntity: 'sensor.roche_podcasts_skips'
     },
 
     // Home tile (js/devices.js): Home Assistant's devices by room. `exclude`

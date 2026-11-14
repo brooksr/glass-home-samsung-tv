@@ -41,6 +41,11 @@ import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bedtime
+import androidx.compose.material.icons.filled.Speed
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
@@ -76,9 +81,18 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.layout
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -172,7 +186,9 @@ class MainActivity : ComponentActivity() {
 class Playing(val id: String?, val title: String, val show: String, val art: String?, val playing: Boolean,
               /** Radio: the song on air (from the stream), if it says. */
               val song: String?, val live: Boolean,
-              val position: Long, val duration: Long, val speed: Float, val queue: List<String>, val index: Int)
+              val position: Long, val duration: Long, val speed: Float, val queue: List<String>, val index: Int,
+              /** Playing the episode's ad-free copy ([AdFree]): the position is in its time. */
+              val clean: Boolean = false)
 
 @Composable
 fun rememberPlaying(c: MediaController?): Playing? {
@@ -186,7 +202,8 @@ fun rememberPlaying(c: MediaController?): Playing? {
                     item.mediaMetadata.extras?.getString("song"),
                     item.mediaId.startsWith(Station.PREFIX),
                     c.currentPosition, c.duration.coerceAtLeast(0), c.playbackParameters.speed,
-                    (0 until c.mediaItemCount).map { c.getMediaItemAt(it).mediaId }, c.currentMediaItemIndex)
+                    (0 until c.mediaItemCount).map { c.getMediaItemAt(it).mediaId }, c.currentMediaItemIndex,
+                    PlaybackService.cleanOf(item))
             }
             delay(500)
         }
@@ -218,6 +235,33 @@ fun openYouTube(ctx: android.content.Context, videoId: String, start: Int = 0) {
     runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
 }
 
+/** Web addresses (with or without http, or a bare domain like example.com/offer) and email addresses in plain text. */
+private val LINK = Regex(
+    "(?i)\\b(?:https?://[^\\s<>\"]+|www\\.[^\\s<>\"]+|[\\w.+-]+@[\\w-]+(?:\\.[\\w-]+)+" +
+        "|(?:[a-z0-9-]+\\.)+(?:com|org|net|io|co|fm|ly|me|tv|app|us|uk|ca|au|gg|dev|show|link|info|biz|edu|gov|ai|to|be|so|xyz|shop|store|news)" +
+        "(?:/[^\\s<>\"]*)?\\b/?)")
+
+/** [text] with its web and email addresses made tappable; they open in the browser or mail app. */
+fun linkify(text: String, color: Color): AnnotatedString = buildAnnotatedString {
+    val style = TextLinkStyles(SpanStyle(color = color, textDecoration = TextDecoration.Underline))
+    var at = 0
+    for (m in LINK.findAll(text)) {
+        // Sentence punctuation and an unmatched closing bracket belong to the text, not the address.
+        var link = m.value.trimEnd('.', ',', ';', ':', '!', '?', '\'', '"', '…')
+        if (link.endsWith(')') && link.count { it == '(' } < link.count { it == ')' }) link = link.dropLast(1)
+        if (link.isEmpty()) continue
+        append(text, at, m.range.first)
+        val url = when {
+            link.contains("://") -> link
+            '@' in link && '/' !in link -> "mailto:$link"
+            else -> "https://$link"
+        }
+        withLink(LinkAnnotation.Url(url, style)) { append(link) }
+        at = m.range.first + link.length
+    }
+    append(text, at, text.length)
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun App(repo: Repo, news: News, controller: MediaController?) {
@@ -229,13 +273,19 @@ fun App(repo: Repo, news: News, controller: MediaController?) {
     val refreshing by repo.refreshing.collectAsStateWithLifecycle()
     val opened by repo.opened.collectAsStateWithLifecycle()
     val playing = rememberPlaying(controller)
-    var tab by rememberSaveable { mutableIntStateOf(0) }
-    if (tab == 3) tab = 1   // Discover is part of Shows now
+    var tab by rememberSaveable { mutableIntStateOf(1) }
+    if (tab == 3 || tab == 0) tab = 1   // Discover and Latest are both part of Shows now
     var openShowId by rememberSaveable { mutableStateOf<String?>(null) }
     /** An episode's page, opened from Latest or Search; a show opened from it goes on top. */
     var openEpisodeId by rememberSaveable { mutableStateOf<String?>(null) }
-    /** Latest's scroll position, kept while an episode's page is open. */
+    /** Each tab's scroll position, kept while another tab or a page is open; tapping the tab again goes back to the top. */
     val latestList = rememberLazyListState()
+    val showsGrid = rememberLazyGridState()
+    val discoverList = rememberLazyListState()
+    val booksGrid = rememberLazyGridState()
+    val radioList = rememberLazyListState()
+    val newsList = rememberLazyListState()
+    val watchList = rememberLazyListState()
     var openBookId by rememberSaveable { mutableStateOf<String?>(null) }
     /** A movie or show from the Watch tab. */
     var openWatchId by rememberSaveable { mutableStateOf<String?>(null) }
@@ -247,6 +297,8 @@ fun App(repo: Repo, news: News, controller: MediaController?) {
     var category by rememberSaveable { mutableStateOf<String?>(null) }
     val ctx = LocalContext.current
     val prefs = ctx.getSharedPreferences("player", 0)
+    /** The Shows tab's view: the newest episodes (what Latest was) or the shows. */
+    var episodesView by rememberSaveable { mutableStateOf(prefs.getBoolean("episodesView", true)) }
     val snack = remember { SnackbarHostState() }
 
     val updated by repo.updated.collectAsStateWithLifecycle()
@@ -270,7 +322,7 @@ fun App(repo: Repo, news: News, controller: MediaController?) {
         val (eps, cur) = repo.loadQueue()
         if (eps.isEmpty()) return@LaunchedEffect
         val p = progress[eps[cur].id]
-        c.setMediaItems(eps.map { PlaybackService.item(it, repo.show(it.showId)) }, cur, if (p != null && !p.done) p.t * 1000L else 0L)
+        c.setMediaItems(eps.map { PlaybackService.item(it, repo.show(it.showId)) }, cur, AdFree.startMs(eps[cur].id, p, back = 0))
         c.setPlaybackSpeed(prefs.getFloat("speed", 1f))
     }
 
@@ -314,7 +366,7 @@ fun App(repo: Repo, news: News, controller: MediaController?) {
             val c = controller ?: return@play
             if (c.currentMediaItem?.mediaId == e.id) { start(c); fullPlayer = true; return@play }
             val p = progress[e.id]
-            val startMs = if (p != null && !p.done) ((p.t - 5).coerceAtLeast(0) * 1000L) else 0L
+            val startMs = AdFree.startMs(e.id, p)
             val queued = indexOf(c, e.id)
             if (queued != null) {
                 c.seekTo(queued, startMs)
@@ -330,6 +382,7 @@ fun App(repo: Repo, news: News, controller: MediaController?) {
             c.setPlaybackSpeed(prefs.getFloat("speed", 1f))
             start(c)
             if (p == null || p.done) repo.setProgress(e.id, e.showId, 0, p?.dur ?: e.duration, false)
+            scope.launch { repo.requestAdFree(e) }
         },
         playNext = { e ->
             controller?.let { c ->
@@ -338,6 +391,7 @@ fun App(repo: Repo, news: News, controller: MediaController?) {
                 c.addMediaItem(at, PlaybackService.item(e, repo.show(e.showId)))
                 if (c.playbackState == Player.STATE_IDLE) c.prepare()
                 scope.launch { snack.showSnackbar("Playing next") }
+                scope.launch { repo.requestAdFree(e) }
             }
         },
         enqueue = { e ->
@@ -347,6 +401,7 @@ fun App(repo: Repo, news: News, controller: MediaController?) {
                     if (c.playbackState == Player.STATE_IDLE) c.prepare()
                 }
                 scope.launch { snack.showSnackbar("Added to Up next") }
+                scope.launch { repo.requestAdFree(e) }
             }
         },
         setPlayed = { e, played -> repo.setPlayed(e, played) },
@@ -431,14 +486,30 @@ fun App(repo: Repo, news: News, controller: MediaController?) {
             val tabs = bibleAt == null && openWatchId == null && openShowId == null && openEpisodeId == null && openBookId == null && !searching
             Column(if (tabs) Modifier else Modifier.navigationBarsPadding()) {
                 if (playing != null) MiniPlayer(playing, onOpen = { fullPlayer = true }, onToggle = { controller?.let { c -> if (c.isPlaying) c.pause() else resume(c, playing.live) } })
+                // The tab you're on, tapped again: back to its top.
+                fun select(t: Int) {
+                    if (t != tab) { tab = t; return }
+                    scope.launch {
+                        when (t) {
+                            1 -> when {
+                                episodesView -> latestList.animateScrollToItem(0)
+                                category in DISCOVER -> discoverList.animateScrollToItem(0)
+                                else -> showsGrid.animateScrollToItem(0)
+                            }
+                            4 -> booksGrid.animateScrollToItem(0)
+                            5 -> radioList.animateScrollToItem(0)
+                            2 -> newsList.animateScrollToItem(0)
+                            6 -> watchList.animateScrollToItem(0)
+                        }
+                    }
+                }
                 if (tabs) NavigationBar {
-                    NavigationBarItem(selected = tab == 0, onClick = { tab = 0 }, icon = { Icon(Icons.Filled.Schedule, null) }, label = { Text("Latest") })
-                    NavigationBarItem(selected = tab == 1, onClick = { tab = 1 }, icon = { Icon(Icons.Filled.GridView, null) }, label = { Text("Shows") })
-                    NavigationBarItem(selected = tab == 4, onClick = { tab = 4 }, icon = { Icon(Icons.Filled.AutoStories, null) }, label = { Text("Books") })
-                    NavigationBarItem(selected = tab == 5, onClick = { tab = 5 }, icon = { Icon(Icons.Filled.Radio, null) }, label = { Text("Radio") })
-                    NavigationBarItem(selected = tab == 2, onClick = { tab = 2 }, icon = { Icon(Icons.Filled.Newspaper, null) }, label = { Text("News") })
+                    NavigationBarItem(selected = tab == 1, onClick = { select(1) }, icon = { Icon(Icons.Filled.GridView, null) }, label = { Text("Shows") })
+                    NavigationBarItem(selected = tab == 4, onClick = { select(4) }, icon = { Icon(Icons.Filled.AutoStories, null) }, label = { Text("Books") })
+                    NavigationBarItem(selected = tab == 5, onClick = { select(5) }, icon = { Icon(Icons.Filled.Radio, null) }, label = { Text("Radio") })
+                    NavigationBarItem(selected = tab == 2, onClick = { select(2) }, icon = { Icon(Icons.Filled.Newspaper, null) }, label = { Text("News") })
                     // Home build only for now (the shareable one has no list to show).
-                    if (BuildConfig.HA_URL.isNotEmpty()) NavigationBarItem(selected = tab == 6, onClick = { tab = 6 }, icon = { Icon(Icons.Filled.Movie, null) }, label = { Text("Watch") })
+                    if (BuildConfig.HA_URL.isNotEmpty()) NavigationBarItem(selected = tab == 6, onClick = { select(6) }, icon = { Icon(Icons.Filled.Movie, null) }, label = { Text("Watch") })
                 }
             }
         },
@@ -449,7 +520,7 @@ fun App(repo: Repo, news: News, controller: MediaController?) {
             val episode = openEpisodeId.takeIf { show == null }?.let { id -> episodes.values.firstNotNullOfOrNull { l -> l.firstOrNull { it.id == id } } ?: repo.episode(id) }
             when {
                 openWatchId != null && watchTitles.any { it.id == openWatchId } -> TitleScreen(watch, watchTitles.first { it.id == openWatchId })
-                tab == 6 -> WatchScreen(watch, if (searching) query else "") { openWatchId = it.id }
+                tab == 6 -> WatchScreen(watch, if (searching) query else "", watchList) { openWatchId = it.id }
                 bibleAt != null -> BibleScreen(bible, bibleAt?.split(":")?.takeIf { it.size == 2 }?.let { (b, c) -> b.toInt() to c.toInt() })
                 book != null && show == null -> BookScreen(book, repo.hasText(book), progress, playing?.id, actions, ::playBook,
                     read = if (book.show.category == "Bible" && bible.available) ({
@@ -461,20 +532,30 @@ fun App(repo: Repo, news: News, controller: MediaController?) {
                 show != null -> ShowScreen(repo, show, shows.any { it.id == show.id }, episodes[show.id].orEmpty(), progress, playing?.id, prefs, actions, ::unsubscribe)
                 searching -> SearchResults(repo, query, shows, episodes, progress, playing?.id, actions,
                     open = { s -> repo.preview(s); openShowId = s.id }, unsubscribe = ::unsubscribe)
-                tab == 2 -> NewsScreen(news)
-                tab == 4 -> BooksScreen(repo.books, progress, readBible = if (bible.available) ({ bibleAt = "" }) else null) { openBookId = it.id }
-                tab == 5 -> RadioScreen(radio, playing?.id, playing?.playing == true, ::playStation)
+                tab == 2 -> NewsScreen(news, newsList)
+                tab == 4 -> BooksScreen(repo.books, progress, readBible = if (bible.available) ({ bibleAt = "" }) else null, listState = booksGrid) { openBookId = it.id }
+                tab == 5 -> RadioScreen(radio, playing?.id, playing?.playing == true, radioList, ::playStation)
                 else -> PullToRefreshBox(isRefreshing = refreshing, onRefresh = { scope.launch { repo.refresh(everything = true) } }) {
-                    // Shows also offers For you and Top charts among its categories; Latest offers In Progress, New and Complete.
-                    val cat = category.takeIf { if (tab == 1) it !in STATUS else it !in DISCOVER }
-                    Column {
-                        CategoryChips(shows, cat, extra = if (tab == 1) DISCOVER else STATUS) { category = it }
-                        when {
-                            tab == 0 -> LatestScreen(shows, episodes, progress, status, updated, playing?.id, cat, actions, latestList)
-                            cat in DISCOVER -> DiscoverList(repo, shows, charts = cat == TOP,
-                                open = { s -> repo.preview(s); openShowId = s.id }, unsubscribe = ::unsubscribe)
-                            else -> ShowsGrid(shows, cat, open = { openShowId = it.id }, unsubscribe = ::unsubscribe)
+                    // Episodes offer In Progress, New and Complete among the categories; Shows offer For you and Top charts.
+                    val cat = category.takeIf { if (!episodesView) it !in STATUS else it !in DISCOVER }
+                    // The Episodes / Shows switch and the chips scroll away with the list, rather than staying pinned.
+                    val header: @Composable () -> Unit = {
+                        Column {
+                            SingleChoiceSegmentedButtonRow(Modifier.padding(horizontal = 16.dp, vertical = 2.dp).width(220.dp).height(32.dp)) {
+                                listOf(true to "Episodes", false to "Shows").forEachIndexed { i, (v, label) ->
+                                    SegmentedButton(selected = episodesView == v, onClick = { episodesView = v; prefs.edit { putBoolean("episodesView", v) } },
+                                        shape = SegmentedButtonDefaults.itemShape(i, 2), icon = {},
+                                        label = { Text(label, style = MaterialTheme.typography.labelMedium) })
+                                }
+                            }
+                            CategoryChips(shows, cat, extra = if (!episodesView) DISCOVER else STATUS) { category = it }
                         }
+                    }
+                    when {
+                        episodesView -> LatestScreen(shows, episodes, progress, status, updated, playing?.id, cat, actions, latestList, header)
+                        cat in DISCOVER -> DiscoverList(repo, shows, charts = cat == TOP, discoverList, header,
+                            open = { s -> repo.preview(s); openShowId = s.id }, unsubscribe = ::unsubscribe)
+                        else -> ShowsGrid(shows, cat, showsGrid, header, open = { openShowId = it.id }, unsubscribe = ::unsubscribe)
                     }
                 }
             }
@@ -525,7 +606,8 @@ private fun chipIcon(c: String) = when (c) {
 /** Latest, newest first; played and half-played episodes stay in their place. [category] may be a show category or one of [STATUS]. */
 @Composable
 fun LatestScreen(shows: List<Show>, episodes: Map<String, List<Episode>>, progress: Map<String, Progress>,
-                 status: String, updated: Long, current: String?, category: String?, actions: Actions, listState: androidx.compose.foundation.lazy.LazyListState = rememberLazyListState()) {
+                 status: String, updated: Long, current: String?, category: String?, actions: Actions, listState: androidx.compose.foundation.lazy.LazyListState = rememberLazyListState(),
+                 header: @Composable () -> Unit = {}) {
     val showById = remember(shows) { shows.associateBy { it.id } }
     val byId = remember(episodes, showById) { episodes.filterKeys { it in showById }.values.flatten().associateBy { it.id } }
     val state = category.takeIf { it in STATUS }
@@ -544,6 +626,7 @@ fun LatestScreen(shows: List<Show>, episodes: Map<String, List<Episode>>, progre
         pool.distinctBy { it.id }.filter(::keep).sortedByDescending { it.date }.take(if (state == null) 60 else 100)
     }
     LazyColumn(Modifier.fillMaxSize(), state = listState) {
+        item(key = "header") { header() }
         if (status.isNotEmpty()) item { Text(status, Modifier.padding(16.dp, 8.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
         item {
             Row(verticalAlignment = Alignment.Bottom) {
@@ -562,13 +645,22 @@ fun Header(text: String) = Text(text, Modifier.padding(16.dp, 16.dp, 16.dp, 4.dp
     color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
 
 @Composable
-fun ShowsGrid(shows: List<Show>, category: String?, open: (Show) -> Unit, unsubscribe: (Show) -> Unit) {
+fun ShowsGrid(shows: List<Show>, category: String?, state: androidx.compose.foundation.lazy.grid.LazyGridState = rememberLazyGridState(),
+              header: @Composable () -> Unit = {}, open: (Show) -> Unit, unsubscribe: (Show) -> Unit) {
     val groups = remember(shows, category) {
         shows.filter { category == null || it.category == category }.sortedByDescending { it.newest }
             .groupBy { it.category }.toList().sortedBy { catRank(it.first) }
     }
-    LazyVerticalGrid(GridCells.Adaptive(108.dp), Modifier.fillMaxSize(), contentPadding = PaddingValues(12.dp),
+    LazyVerticalGrid(GridCells.Adaptive(108.dp), Modifier.fillMaxSize(), state = state, contentPadding = PaddingValues(12.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        // Full width, past the grid's own padding, so it lines up with the Episodes view.
+        item(key = "header", span = { GridItemSpan(maxLineSpan) }) {
+            Box(Modifier.layout { m, c ->
+                val pad = 12.dp.roundToPx()
+                val p = m.measure(c.copy(minWidth = 0, maxWidth = c.maxWidth + 2 * pad))
+                layout(c.maxWidth, p.height) { p.place(-pad, -pad) }
+            }) { header() }
+        }
         groups.forEach { (cat, list) ->
             if (category == null) item(key = "h$cat", span = { GridItemSpan(maxLineSpan) }) {
                 Text(cat, Modifier.padding(top = 8.dp), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
@@ -692,9 +784,10 @@ fun EpisodeRow(e: Episode, show: Show?, p: Progress?, current: Boolean, actions:
         Row(Modifier.fillMaxWidth().combinedClickable(onClick = { if (show != null) actions.openEpisode(e) else actions.play(e) }, onLongClick = { menu = true })
             .background(if (current) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent)
             .padding(horizontal = 16.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-            if (show != null) Art(show.art, Modifier.size(68.dp).padding(end = 12.dp))
+            // Big enough that the row's height is set by its text (with room kept for the progress bar).
+            if (show != null) Art(show.art, Modifier.size(84.dp).padding(end = 12.dp))
             Column(Modifier.weight(1f)) {
-                Text(e.title, style = MaterialTheme.typography.bodyLarge, maxLines = 2, overflow = TextOverflow.Ellipsis,
+                Text(remember(e.title) { Headline.tame(e.title) }, style = MaterialTheme.typography.bodyLarge, maxLines = 2, overflow = TextOverflow.Ellipsis,
                     color = if (p?.done == true || opened) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface)
                 // Show name (bold, cut short when long) and tags on the left; date and length always whole on the right.
                 val stamp = listOfNotNull(ago(e.date).takeIf { e.date > 0 },
@@ -711,16 +804,20 @@ fun EpisodeRow(e: Episode, show: Show?, p: Progress?, current: Boolean, actions:
                         if (e.youtubeOnly) Image(painterResource(R.drawable.youtube), "YouTube", Modifier.size(17.dp, 12.dp))
                         if (!e.youtubeOnly && e.videoId.isNotEmpty()) Tag("Video")
                         if (e.transcriptUrl.isNotEmpty()) Tag("Transcript")
+                        if (AdFree.info(e.id)?.let { it.cuts.isNotEmpty() || it.skip.isNotEmpty() } == true) NoAdsBadge()
                         if (opened && e.youtubeOnly && p?.done != true) Text("Opened", style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, softWrap = false)
                     }
                     Text(stamp.joinToString(" · "), Modifier.padding(start = 8.dp), style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, softWrap = false)
                 }
-                if (e.desc.isNotEmpty()) Text(e.desc, Modifier.padding(top = 2.dp), style = MaterialTheme.typography.bodySmall,
+                val desc = remember(e.desc) { Repo.cleanDesc(e.desc) }
+                if (desc.isNotEmpty()) Text(desc, Modifier.padding(top = 2.dp), style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                // The bar's room is always kept, so starting an episode doesn't make its row taller.
                 if (p != null && !p.done && p.t > 0) LinearProgressIndicator(progress = { p.fraction }, modifier = Modifier.fillMaxWidth().padding(top = 6.dp).height(3.dp),
                     drawStopIndicator = {})
+                else Spacer(Modifier.height(9.dp))
             }
             if (p?.done == true) Icon(Icons.Filled.CheckCircle, "Played", Modifier.padding(start = 8.dp).size(20.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
@@ -745,6 +842,8 @@ fun EpisodeScreen(repo: Repo, e: Episode, p: Progress?, current: Boolean, action
     val show = repo.show(e.showId)
     // The lists carry a short description; the show's own file has the longer one.
     LaunchedEffect(e.id) { if (show != null) runCatching { repo.loadShow(show) } }
+    var second by remember(e.id) { mutableStateOf<Extras?>(null) }
+    LaunchedEffect(e.id) { second = repo.secondPass(e) }
     val started = p != null && !p.done && p.t > 0
     LazyColumn(Modifier.fillMaxSize()) {
         item {
@@ -764,7 +863,7 @@ fun EpisodeScreen(repo: Repo, e: Episode, p: Progress?, current: Boolean, action
                 }
             }
         }
-        item { Text(e.title, Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.titleLarge) }
+        item { Text(Headline.tame(e.title), Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.titleLarge) }
         item {
             Row(Modifier.padding(16.dp, 12.dp, 16.dp, 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 if (e.youtubeOnly) Button(onClick = { actions.watch(e, 0) }) { Text("Watch on YouTube") }
@@ -793,8 +892,49 @@ fun EpisodeScreen(repo: Repo, e: Episode, p: Progress?, current: Boolean, action
         if (started) item {
             LinearProgressIndicator(progress = { p!!.fraction }, modifier = Modifier.fillMaxWidth().padding(16.dp, 4.dp).height(4.dp), drawStopIndicator = {})
         }
-        if (e.desc.isNotEmpty()) item {
-            Text(e.desc, Modifier.padding(16.dp), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        // The second pass, when the laptop has done it: a summary, the description without its ads, chapter points.
+        if (second?.summary?.isNotEmpty() == true) item {
+            Text("Summary", Modifier.padding(16.dp, 16.dp, 16.dp, 4.dp), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+            Text(second!!.summary, Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodyLarge)
+        }
+        val desc = second?.description ?: Repo.cleanDesc(e.desc)
+        if (desc.isNotEmpty()) item {
+            Text(linkify(desc, MaterialTheme.colorScheme.primary), Modifier.padding(16.dp), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        if (second?.chapters?.isNotEmpty() == true) {
+            item { Text("Chapters", Modifier.padding(16.dp, 8.dp, 16.dp, 4.dp), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary) }
+            items(second!!.chapters.size) { i -> ChapterBlock(second!!.chapters[i], Modifier.padding(horizontal = 16.dp, vertical = 6.dp)) }
+        }
+    }
+}
+
+/** A chapter's time, title and points. */
+@Composable
+fun ChapterBlock(ch: Chapter, modifier: Modifier = Modifier, current: Boolean = false) {
+    Column(modifier) {
+        Row {
+            Text(ch.title.ifEmpty { "Chapter" }, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium,
+                fontWeight = if (current) FontWeight.Bold else FontWeight.SemiBold)
+            Text(clock(ch.start * 1000L), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        ch.points.forEach { pt ->
+            Row(Modifier.padding(top = 2.dp)) {
+                Text("•", Modifier.width(14.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(pt, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+    }
+}
+
+/** "AD" struck through, small: the laptop has taken this episode's ads out (tools/podcasts/adfree.py). */
+@Composable
+fun NoAdsBadge() {
+    val color = MaterialTheme.colorScheme.primary
+    Box(Modifier.semantics { contentDescription = "Ads removed" }.border(1.dp, color, RoundedCornerShape(4.dp)).padding(horizontal = 3.dp),
+        contentAlignment = Alignment.Center) {
+        Text("AD", style = MaterialTheme.typography.labelSmall, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = color)
+        Canvas(Modifier.matchParentSize()) {
+            drawLine(color, Offset(0f, size.height), Offset(size.width, 0f), strokeWidth = 1.5.dp.toPx())
         }
     }
 }
@@ -829,7 +969,8 @@ private var forYouCache: List<Show>? = null
 private var topCache: List<Show>? = null
 
 @Composable
-fun DiscoverList(repo: Repo, shows: List<Show>, charts: Boolean, open: (Show) -> Unit, unsubscribe: (Show) -> Unit) {
+fun DiscoverList(repo: Repo, shows: List<Show>, charts: Boolean, state: androidx.compose.foundation.lazy.LazyListState = rememberLazyListState(),
+                 header: @Composable () -> Unit = {}, open: (Show) -> Unit, unsubscribe: (Show) -> Unit) {
     val scope = rememberCoroutineScope()
     var includeMine by rememberSaveable { mutableStateOf(false) }
     var forYou by remember { mutableStateOf(forYouCache) }
@@ -854,7 +995,8 @@ fun DiscoverList(repo: Repo, shows: List<Show>, charts: Boolean, open: (Show) ->
     val found = remember(charts, top, forYou, mine, includeMine) { (if (charts) top else forYou)?.filter { includeMine || it.id !in mine } }
     Column(Modifier.fillMaxSize()) {
         if (loading) LinearProgressIndicator(Modifier.fillMaxWidth().padding(top = 4.dp))
-        LazyColumn(Modifier.fillMaxSize()) {
+        LazyColumn(Modifier.fillMaxSize(), state = state) {
+            item(key = "header") { header() }
             item {
                 Row(Modifier.fillMaxWidth().padding(16.dp, 4.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(if (charts) "Apple's top podcasts in the US." else "Ranked by how closely each show's genres match your list.",
@@ -909,7 +1051,8 @@ private val SHELVES = listOf("Bible", "Great Novels", "Adventure & Mystery", "Sc
     "Poetry & Drama", "Children's Classics")
 
 @Composable
-fun BooksScreen(books: List<Book>, progress: Map<String, Progress>, readBible: (() -> Unit)? = null, open: (Book) -> Unit) {
+fun BooksScreen(books: List<Book>, progress: Map<String, Progress>, readBible: (() -> Unit)? = null,
+                listState: androidx.compose.foundation.lazy.grid.LazyGridState = rememberLazyGridState(), open: (Book) -> Unit) {
     var shelf by rememberSaveable { mutableStateOf<String?>(null) }
     val shelves = remember(books) { books.map { it.show.category }.distinct().sortedBy { SHELVES.indexOf(it).let { i -> if (i < 0) 99 else i } } }
     val fractions = remember(books, progress) { books.associate { it.id to bookFraction(it, progress) } }
@@ -917,7 +1060,7 @@ fun BooksScreen(books: List<Book>, progress: Map<String, Progress>, readBible: (
         books.filter { resumeAt(it, progress) != null }
             .sortedByDescending { b -> b.chapters.maxOf { progress[it.id]?.at ?: 0 } }
     }
-    LazyVerticalGrid(GridCells.Adaptive(108.dp), Modifier.fillMaxSize(), contentPadding = PaddingValues(12.dp),
+    LazyVerticalGrid(GridCells.Adaptive(108.dp), Modifier.fillMaxSize(), state = listState, contentPadding = PaddingValues(12.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         item(key = "chips", span = { GridItemSpan(maxLineSpan) }) {
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -1056,7 +1199,8 @@ private val RADIO_GENRES = listOf("Jazz", "Classical", "News", "Talk", "Rock", "
 private val radioCache = mutableMapOf<String, List<Station>>()
 
 @Composable
-fun RadioScreen(radio: Radio, current: String?, playing: Boolean, play: (Station) -> Unit) {
+fun RadioScreen(radio: Radio, current: String?, playing: Boolean, listState: androidx.compose.foundation.lazy.LazyListState = rememberLazyListState(),
+                play: (Station) -> Unit) {
     val favs by radio.favorites.collectAsStateWithLifecycle()
     val recent by radio.recent.collectAsStateWithLifecycle()
     val focus = LocalFocusManager.current
@@ -1101,7 +1245,7 @@ fun RadioScreen(radio: Radio, current: String?, playing: Boolean, play: (Station
             shelves.forEach { c -> FilterChip(shelf == c, { shelf = c }, { Text(c) }) }
         }
         if (loading) LinearProgressIndicator(Modifier.fillMaxWidth().padding(top = 4.dp))
-        LazyColumn(Modifier.fillMaxSize()) {
+        LazyColumn(Modifier.fillMaxSize(), state = listState) {
             if (q.length < 2 && shelf == "Local") item { Hint("Stations within about 150 km of ${BuildConfig.PLACE}, most played first.") }
             if (q.length < 2 && shelf == "SomaFM") item { Hint("Listener-supported, commercial-free channels from San Francisco.") }
             if (failed) item { Hint("Couldn't reach the station directory. Pull down or try again in a moment.") }
@@ -1199,12 +1343,15 @@ fun MiniPlayer(p: Playing, onOpen: () -> Unit, onToggle: () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FullPlayer(repo: Repo, p: Playing, c: MediaController, onSpeed: (Float) -> Unit, onWatch: (Episode) -> Unit) {
     val all by repo.episodes.collectAsStateWithLifecycle()
     val episode = remember(p.id, all) { repo.episode(p.id.orEmpty()) }
     var extras by remember(p.id) { mutableStateOf<Extras?>(null) }
-    LaunchedEffect(p.id) {
+    // The second pass can arrive while this plays: then its chapters and transcript replace the feed's.
+    val secondPass = AdFree.info(p.id.orEmpty())?.extras == true
+    LaunchedEffect(p.id, secondPass) {
         // The Latest list carries episodes without descriptions; the show's file has them.
         if (episode != null && episode.desc.isEmpty()) repo.show(episode.showId)?.let { repo.loadShow(it) }
         extras = episode?.let { repo.extras(it) }
@@ -1214,7 +1361,10 @@ fun FullPlayer(repo: Repo, p: Playing, c: MediaController, onSpeed: (Float) -> U
     val posSec = (p.position / 1000).toInt()
     val chapterNow = chapters.indexOfLast { it.start <= posSec }
     var tab by remember(p.id) { mutableIntStateOf(0) }
-    val tabs = listOfNotNull("Episode", "Up next", "Chapters".takeIf { chapters.isNotEmpty() }, (if (extras?.estimated == true) "Read along" else "Transcript").takeIf { lines.isNotEmpty() })
+    // What the laptop found and removed (tools/podcasts/adfree.py), if it did this episode.
+    val ads = AdFree.info(p.id.orEmpty())?.takeIf { it.cuts.isNotEmpty() || it.maybe.isNotEmpty() || it.skip.isNotEmpty() }
+    val tabs = listOfNotNull("Episode", "Up next", "Chapters".takeIf { chapters.isNotEmpty() }, (if (extras?.estimated == true) "Read along" else "Transcript").takeIf { lines.isNotEmpty() },
+        "Ads".takeIf { ads != null })
     if (tab >= tabs.size) tab = 0
     var dragging by remember { mutableStateOf<Float?>(null) }
     val scope = rememberCoroutineScope()
@@ -1232,8 +1382,33 @@ fun FullPlayer(repo: Repo, p: Playing, c: MediaController, onSpeed: (Float) -> U
             }
         }
         val dur = p.duration.coerceAtLeast(1)
+        // Faint dots where ads were taken out, and a faint band over a sponsor read left in.
+        val marks = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f)
+        val maybeBand = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.35f)
         Slider(value = dragging ?: (p.position.toFloat() / dur), onValueChange = { dragging = it },
-            onValueChangeFinished = { dragging?.let { c.seekTo((it * dur).toLong()) }; dragging = null }, modifier = Modifier.padding(top = 8.dp))
+            onValueChangeFinished = { dragging?.let { c.seekTo((it * dur).toLong()) }; dragging = null }, modifier = Modifier.padding(top = 8.dp),
+            track = { state ->
+                Box {
+                    SliderDefaults.Track(sliderState = state)
+                    if (ads != null && p.duration > 0) Canvas(Modifier.matchParentSize()) {
+                        val len = p.duration / 1000.0
+                        val y = size.height / 2
+                        fun x(t: Double) = (t / len).toFloat().coerceIn(0f, 1f) * size.width
+                        if (p.clean) {
+                            for (cut in ads.cuts) {
+                                val f = ads.toClean(cut.start) / len
+                                if (f in 0.01..0.99) drawCircle(marks, radius = 2.5.dp.toPx(), center = Offset(x(ads.toClean(cut.start)), y))
+                            }
+                        } else if (!ads.file) {
+                            for (cut in ads.cuts) drawLine(marks, Offset(x(cut.start), y), Offset(x(cut.end), y), strokeWidth = 3.dp.toPx())
+                        }
+                        if (p.clean || !ads.file) {
+                            for (m in ads.maybe) drawLine(maybeBand, Offset(x(m.start), y), Offset(x(m.end), y), strokeWidth = 6.dp.toPx())
+                            for (k in ads.skip) drawLine(marks, Offset(x(k.start), y), Offset(x(k.end), y), strokeWidth = 3.dp.toPx())
+                        }
+                    }
+                }
+            })
         Row(Modifier.fillMaxWidth()) {
             Text(clock(((dragging ?: (p.position.toFloat() / dur)) * dur).toLong()), style = MaterialTheme.typography.labelSmall)
             Spacer(Modifier.weight(1f))
@@ -1253,6 +1428,18 @@ fun FullPlayer(repo: Repo, p: Playing, c: MediaController, onSpeed: (Float) -> U
             IconButton(onClick = { chapters.getOrNull(chapterNow + 1)?.let { c.seekTo(it.start * 1000L) } },
                 enabled = chapterNow + 1 < chapters.size && chapters.isNotEmpty()) { Icon(Icons.Filled.SkipNext, "Next chapter") }
         }
+        // A likely sponsor read the laptop left in (not sure enough to cut): offered as a skip.
+        val sponsor = AdFree.info(p.id.orEmpty())?.maybeAt(p.position / 1000.0, p.clean)
+        if (sponsor != null && episode != null) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+            FilledTonalButton(onClick = {
+                c.seekTo((sponsor.end * 1000).toLong())
+                scope.launch { repo.logSkip(episode.id, episode.showId, sponsor.start.toInt(), sponsor.end.toInt(), p.clean) }
+            }) {
+                Icon(Icons.Filled.Forward30, null, Modifier.size(18.dp))
+                Spacer(Modifier.width(6.dp))
+                Text("Skip sponsor")
+            }
+        }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
             SpeedButton(p.speed) { next -> c.setPlaybackSpeed(next); onSpeed(next) }
             // Hands this episode (and Up next) to Roche Home on the TV, and pauses here.
@@ -1260,7 +1447,10 @@ fun FullPlayer(repo: Repo, p: Playing, c: MediaController, onSpeed: (Float) -> U
                 casting = true
                 scope.launch {
                     val next = p.queue.drop(p.index + 1).mapNotNull { repo.episode(it) }
-                    val ok = repo.castToTv(episode, posSec, p.speed, next)
+                    // The TV plays the ad-free copy when there is one: the place goes in its time.
+                    val info = AdFree.info(episode.id)?.takeIf { it.file }
+                    val pos = if (info != null && !p.clean) info.toClean(p.position / 1000.0).toInt() else posSec
+                    val ok = repo.castToTv(episode, pos, p.speed, next, clean = info != null)
                     casting = false
                     if (ok) c.pause()
                     android.widget.Toast.makeText(ctx, if (ok) "Playing on the TV" else "Couldn't reach Home Assistant", android.widget.Toast.LENGTH_SHORT).show()
@@ -1282,20 +1472,26 @@ fun FullPlayer(repo: Repo, p: Playing, c: MediaController, onSpeed: (Float) -> U
         }
         Box(Modifier.weight(1f).fillMaxWidth()) {
             when (tabs[tab]) {
-                "Episode" -> LazyColumn { item { Text(episode?.desc.orEmpty().ifEmpty { "No description." }, Modifier.padding(vertical = 12.dp),
-                    style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) } }
+                "Episode" -> LazyColumn {
+                    if (extras?.summary?.isNotEmpty() == true) item {
+                        Text(extras!!.summary, Modifier.padding(top = 12.dp), style = MaterialTheme.typography.bodyMedium)
+                    }
+                    item {
+                        val desc = extras?.description ?: Repo.cleanDesc(episode?.desc.orEmpty())
+                        Text(linkify(desc.ifEmpty { if (extras?.summary.isNullOrEmpty()) "No description." else "" }, MaterialTheme.colorScheme.primary),
+                            Modifier.padding(vertical = 12.dp), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
                 "Up next" -> UpNext(repo, p, c)
                 "Chapters" -> LazyColumn {
                     itemsIndexed(chapters) { i, ch ->
-                        Row(Modifier.fillMaxWidth().clickable { c.seekTo(ch.start * 1000L) }
+                        ChapterBlock(ch.copy(title = ch.title.ifEmpty { "Chapter ${i + 1}" }), Modifier.fillMaxWidth().clickable { c.seekTo(ch.start * 1000L) }
                             .background(if (i == chapterNow) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent)
-                            .padding(12.dp, 10.dp)) {
-                            Text(ch.title.ifEmpty { "Chapter ${i + 1}" }, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
-                            Text(clock(ch.start * 1000L), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
+                            .padding(12.dp, 10.dp), current = i == chapterNow)
                     }
                 }
                 "Transcript", "Read along" -> Transcript(lines, extras?.timed == true, posSec, extras?.estimated == true) { c.seekTo(it * 1000L) }
+                "Ads" -> if (ads != null) AdsTab(ads, p.clean) { c.seekTo((it * 1000).toLong()) }
             }
         }
     }
@@ -1308,11 +1504,14 @@ fun FullPlayer(repo: Repo, p: Playing, c: MediaController, onSpeed: (Float) -> U
 fun SpeedButton(speed: Float, set: (Float) -> Unit) {
     var menu by remember { mutableStateOf(false) }
     Box {
-        Text("Speed ${speedLabel(speed)}",
-            Modifier.padding(vertical = 4.dp).clip(RoundedCornerShape(20.dp))
-                .combinedClickable(onClick = { set(SPEEDS[(SPEEDS.indexOf(speed).coerceAtLeast(0) + 1) % SPEEDS.size]) }, onLongClick = { menu = true })
-                .padding(horizontal = 12.dp, vertical = 8.dp),
-            color = MaterialTheme.colorScheme.primary, fontSize = 15.sp, style = MaterialTheme.typography.labelLarge)
+        Row(Modifier.padding(vertical = 4.dp).clip(RoundedCornerShape(20.dp))
+                .combinedClickable(onClickLabel = "Next speed", onClick = { set(SPEEDS[(SPEEDS.indexOf(speed).coerceAtLeast(0) + 1) % SPEEDS.size]) },
+                    onLongClick = { menu = true })
+                .padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Filled.Speed, "Speed", Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
+            Spacer(Modifier.width(6.dp))
+            Text(speedLabel(speed), color = MaterialTheme.colorScheme.primary, fontSize = 15.sp, style = MaterialTheme.typography.labelLarge)
+        }
         DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
             SPEEDS.sorted().forEach { sp ->
                 DropdownMenuItem(text = { Text(speedLabel(sp), fontWeight = if (sp == speed) FontWeight.Bold else null) },
@@ -1330,14 +1529,15 @@ fun SleepButton() {
     var sleepMenu by remember { mutableStateOf(false) }
     Box {
         TextButton(onClick = { sleepMenu = true }) {
-            Icon(Icons.Filled.Bedtime, null, Modifier.size(18.dp))
+            Icon(Icons.Filled.Bedtime, "Sleep timer", Modifier.size(18.dp))
             Spacer(Modifier.width(6.dp))
             var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
             LaunchedEffect(until) { while (until > 0) { now = System.currentTimeMillis(); delay(1000) } }
+            // Minutes until it pauses, rounded up ("14m"); "End" at the end of the episode; "Off".
             Text(when {
-                until > 0 -> "Sleep in " + mins(((until - now) / 1000).toInt().coerceAtLeast(0))
-                endOfEpisode -> "Sleep at end"
-                else -> "Timer"
+                until > 0 -> "${((until - now + 59_999) / 60_000).coerceAtLeast(1)}m"
+                endOfEpisode -> "End"
+                else -> "Off"
             }, fontSize = 15.sp)
         }
         DropdownMenu(expanded = sleepMenu, onDismissRequest = { sleepMenu = false }) {
@@ -1350,6 +1550,102 @@ fun SleepButton() {
                 })
             }
             DropdownMenuItem(text = { Text("End of episode") }, onClick = { Sleep.until.value = 0; Sleep.endOfEpisode.value = true; sleepMenu = false })
+        }
+    }
+}
+
+/** How a stretch was found, most telling first (kinds from tools/podcasts/adfree.py). */
+private val AD_KINDS = linkedMapOf(
+    "dai" to "Inserted by the host (differs between downloads)",
+    "known" to "A known ad (heard before)",
+    "shared" to "Also on another show",
+    "skip" to "You skipped it in another episode",
+    "host" to "Sponsor read (transcript)",
+    "transcript" to "Sponsor words in the transcript",
+    "bumper" to "Between the show's break jingles",
+    "llm-self" to "The show promoting itself (transcript)",
+)
+
+private fun adKinds(kind: String) = kind.split('+').filter { it in AD_KINDS }.sortedBy { AD_KINDS.keys.indexOf(it) }
+
+private fun span(sec: Double): String {
+    val s = sec.toInt()
+    return if (s >= 60) "${s / 60} min ${s % 60} s" else "$s s"
+}
+
+/**
+ * What the laptop did to this episode: the ads taken out (where they were in what you hear,
+ * how long, how they were found) and the sponsor reads left in. A tap goes there.
+ */
+@Composable
+fun AdsTab(ads: AdInfo, clean: Boolean, seek: (Double) -> Unit) {
+    val removed = ads.cuts.sumOf { it.length }
+    LazyColumn {
+        item {
+            Column(Modifier.padding(vertical = 12.dp)) {
+                Text(when {
+                    ads.cuts.isEmpty() && ads.skip.isNotEmpty() -> "${ads.skip.size} sponsor read${if (ads.skip.size == 1) "" else "s"} skipped · ${span(ads.skip.sumOf { it.length })}"
+                    ads.cuts.isEmpty() -> "No ads to remove"
+                    clean -> "${ads.cuts.size} ad break${if (ads.cuts.size == 1) "" else "s"} removed · ${span(removed)}"
+                    else -> "${ads.cuts.size} ad break${if (ads.cuts.size == 1) "" else "s"} found · ${span(removed)}"
+                }, style = MaterialTheme.typography.titleSmall)
+                Text(when {
+                    ads.cuts.isEmpty() -> "No inserted ads, so the original plays."
+                    clean -> "Playing the ad-free copy: ${clock((ads.dur * 1000).toLong())} instead of ${clock((ads.orig * 1000).toLong())}."
+                    else -> "Playing the original (Home Assistant not reachable), so these ads still play."
+                } + " Checked ${ago(ads.at)}.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+        items(ads.cuts.size) { i ->
+            val cut = ads.cuts[i]
+            val at = if (clean) ads.toClean(cut.start) else cut.start
+            Row(Modifier.fillMaxWidth().clickable { seek(at) }.padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(clock((at * 1000).toLong()), Modifier.width(64.dp), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                Column(Modifier.weight(1f)) {
+                    Text(when {
+                        cut.start < 1 -> "Before the show"
+                        ads.orig - cut.end < 2 -> "After the show"
+                        else -> "Ad break"
+                    } + " · " + span(cut.length), style = MaterialTheme.typography.bodyMedium)
+                    Text(adKinds(cut.kind).joinToString(" · ") { AD_KINDS.getValue(it) }.ifEmpty { cut.kind },
+                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        }
+        if (ads.skip.isNotEmpty() && (clean || !ads.file)) {
+            item {
+                Text("Sponsor reads, skipped as they come", Modifier.padding(top = 16.dp, bottom = 4.dp), style = MaterialTheme.typography.titleSmall)
+                Text("Found in the episode's transcript; the player jumps over them.",
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            items(ads.skip.size) { i ->
+                val k = ads.skip[i]
+                Row(Modifier.fillMaxWidth().clickable { seek(k.start) }.padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(clock((k.start * 1000).toLong()), Modifier.width(64.dp), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                    Column(Modifier.weight(1f)) {
+                        Text(when (k.kind) { "llm-produced" -> "Produced ad"; "llm-promo" -> "Promo"; else -> "Sponsor read" } + " · " + span(k.length),
+                            style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
+            }
+        }
+        if (ads.maybe.isNotEmpty() && (clean || !ads.file)) {
+            item {
+                Text("Possible sponsor reads, left in", Modifier.padding(top = 16.dp, bottom = 4.dp), style = MaterialTheme.typography.titleSmall)
+                Text("Not sure enough to cut. The player offers Skip sponsor while one plays; skipping teaches the laptop.",
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            items(ads.maybe.size) { i ->
+                val m = ads.maybe[i]
+                Row(Modifier.fillMaxWidth().clickable { seek(m.start) }.padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(clock((m.start * 1000).toLong()), Modifier.width(64.dp), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.tertiary)
+                    Column(Modifier.weight(1f)) {
+                        Text("Sponsor read? · " + span(m.length), style = MaterialTheme.typography.bodyMedium)
+                        Text(adKinds(m.kind).joinToString(" · ") { AD_KINDS.getValue(it) }.ifEmpty { m.kind },
+                            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
         }
     }
 }
@@ -1444,7 +1740,7 @@ private val NEWS_CATEGORIES = listOf("Conejo Valley", "News & Politics", "Santa 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NewsScreen(news: News) {
+fun NewsScreen(news: News, listState: androidx.compose.foundation.lazy.LazyListState = rememberLazyListState()) {
     val scope = rememberCoroutineScope()
     val ctx = LocalContext.current
     val articles by news.articles.collectAsStateWithLifecycle()
@@ -1459,7 +1755,7 @@ fun NewsScreen(news: News) {
         articles.filter { (category == null || it.category == category) && (source == null || it.source == source) }.take(150)
     }
     PullToRefreshBox(isRefreshing = refreshing, onRefresh = { scope.launch { news.refresh(force = true) } }) {
-        LazyColumn(Modifier.fillMaxSize()) {
+        LazyColumn(Modifier.fillMaxSize(), state = listState) {
             item {
                 Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FilterChip(category == null, { category = null; source = null }, { Text("All") })
@@ -1481,7 +1777,7 @@ fun NewsScreen(news: News) {
                     Column(Modifier.weight(1f)) {
                         Text(listOfNotNull(a.publisher.ifEmpty { a.source }, ago(a.date).takeIf { a.date > 0 }).joinToString(" · "), style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.primary.copy(alpha = if (seen) 0.6f else 1f))
-                        Text(a.title, style = MaterialTheme.typography.titleSmall, maxLines = 3, overflow = TextOverflow.Ellipsis,
+                        Text(Headline.tame(a.title), style = MaterialTheme.typography.titleSmall, maxLines = 3, overflow = TextOverflow.Ellipsis,
                             color = if (seen) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface)
                         if (a.summary.isNotEmpty()) Text(a.summary, style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis,
                             color = MaterialTheme.colorScheme.onSurfaceVariant)

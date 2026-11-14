@@ -20,12 +20,27 @@
  *   show     Up/Down episodes, OK play; the first two rows switch the order
  *            (newest or oldest first) and hide played episodes, per show
  *   audio    OK pause, Left/Right -15 s / +30 s, Down the menu (speed, sleep
- *            timer, chapters, transcript), Rew/FF previous/next chapter
+ *            timer, chapters, transcript), Rew/FF previous/next chapter (FF
+ *            skips a sponsor read while one is flagged)
  *   menu     Up/Down move, Left/Right change speed or sleep timer, OK choose
  *   transcript (beside the player) follows along when the transcript is timed;
  *            Up/Down pick a line, OK jumps there
  * Chapters and transcripts come from extras/<episode id>.json, which build.py
  * makes for the newest 10 episodes of shows whose feeds publish them.
+ *
+ * Ads: tools/podcasts/adfree.py on the laptop finds the ad breaks in the episodes
+ * being listened to (and new ones of the shows listened to regularly) and writes
+ * adfree/<id>.mp3 without them, listed in adfree/index.json ({ eps: { id: { f, d,
+ * cuts: [[start, end, kind]] in the original, maybe: [[start, end]] in the
+ * ad-free copy } } }). An episode with an ad-free copy plays that; one that gets
+ * its copy while playing switches to it. A second pass (transcript and a model) adds "skip"
+ * (sponsor reads, skipped here by themselves) and "x": 1, adfree/<id>.extras.json, chapters and
+ * a transcript in the copy's time, used in place of the feed's. While an episode plays without
+ * them, the index is checked every 30 s for 40 minutes. Progress entries then carry a 6th item,
+ * 1: their seconds are in the ad-free copy's time. "maybe" stretches (likely
+ * sponsor reads left in) show a prompt, and FF skips them. Runs of +30 s presses
+ * (45 s or more) are reported to podcasts.skipsEntity, which teaches adfree.py
+ * what to look for.
  *
  * Cast from the phone: the Android app writes what it's playing to a second
  * entity (podcasts.castEntity): attributes { at (unix s), ep { id, t, u, s, x },
@@ -46,6 +61,7 @@
   var HA = haCfg.url && GH.haToken ? haCfg.url.replace(/\/+$/, '') : '';
   var ENTITY = cfg.syncEntity || 'sensor.roche_podcasts';
   var CAST = cfg.castEntity || 'sensor.roche_podcasts_cast';
+  var SKIPS = cfg.skipsEntity || 'sensor.roche_podcasts_skips';
   var tz = typeof window.tizen !== 'undefined' ? window.tizen : null;
 
   var K = { LEFT: 37, UP: 38, RIGHT: 39, DOWN: 40, ENTER: 13, BACK: 10009, ESC: 27, BACKSPACE: 8,
@@ -105,14 +121,14 @@
   function artUrl(show) { return show && show.art ? (/^https?:/.test(show.art) ? show.art : BASE + show.art) : ''; }
 
   // ---------- progress ----------
-  // id -> [t, dur, done, at, showId]
+  // id -> [t, dur, done, at, showId, clean]: clean 1 when t is in the ad-free copy's time
   var PKEY = 'gh.podcasts.v1';
   var progress = {};
   try { progress = JSON.parse(localStorage.getItem(PKEY)) || {}; } catch (e) { progress = {}; }
   function persist() { try { localStorage.setItem(PKEY, JSON.stringify(progress)); } catch (e) { /* full or off */ } }
   function now() { return Math.floor(Date.now() / 1000); }
-  function setProgress(ep, show, t, dur, done) {
-    progress[ep.id] = [Math.floor(t), Math.floor(dur || ep.s || 0), done ? 1 : 0, now(), show.id];
+  function setProgress(ep, show, t, dur, done, clean) {
+    progress[ep.id] = [Math.floor(t), Math.floor(dur || ep.s || 0), done ? 1 : 0, now(), show.id, clean ? 1 : 0];
     persist();
   }
   function prune(map) {
@@ -198,6 +214,73 @@
     ids.forEach(function (sid) { loadShow(showById[sid], function () { if (--left === 0) cb(); }); });
   }
 
+  // ---------- ads (adfree/index.json) ----------
+  // Seconds in the original <-> in the ad-free copy.
+  function toClean(cuts, t) {
+    var out = t;
+    (cuts || []).forEach(function (c) { if (t >= c[1]) out -= c[1] - c[0]; else if (t > c[0]) out -= t - c[0]; });
+    return Math.max(0, out);
+  }
+  function toOrig(cuts, t) {
+    (cuts || []).forEach(function (c) { if (t >= c[0]) t += c[1] - c[0]; });
+    return t;
+  }
+  // The episode's entry in the index, or null; quick, so playing never waits long.
+  function adInfo(id, cb) {
+    var x = new XMLHttpRequest();
+    var done = false;
+    function finish(j) { if (done) return; done = true; cb(j && j.eps && j.eps[id] || null); }
+    x.timeout = 4000;
+    x.open('GET', BASE + 'adfree/index.json?t=' + Math.floor(Date.now() / 30000));
+    x.onload = function () { var j = null; try { j = x.status === 200 ? JSON.parse(x.responseText) : null; } catch (e) { /* none */ } finish(j); };
+    x.onerror = x.ontimeout = function () { finish(null); };
+    x.send();
+  }
+  function cleanUrl(id, info) { return BASE + 'adfree/' + id + '.mp3?v=' + info.at; }
+  function onClean() { return !!(playing && playing.ads && playing.ads.f && playing.clean); }
+  // A likely sponsor read under t (ad-free copy's time, or the original's when there are no cuts).
+  function maybeAt(t) {
+    var ads = playing && playing.ads;
+    if (!ads || !ads.maybe || (ads.f && !playing.clean)) return null;
+    for (var i = 0; i < ads.maybe.length; i++) if (t >= ads.maybe[i][0] && t < ads.maybe[i][1] - 3) return ads.maybe[i];
+    return null;
+  }
+
+  // Skips: a run of +30 s presses (and any small step back after them) of 45 s or more.
+  var skipRun = null;
+  var skipTimer = null;
+  function noteSeek(from, to) {
+    if (!playing || !media) return;
+    var t = Date.now();
+    if (skipRun && skipRun.ep === playing.ep && t - skipRun.last < 10000) { skipRun.to = to; skipRun.last = t; }
+    else if (to > from) { flushSkip(); skipRun = { ep: playing.ep, show: playing.show, clean: onClean(), from: from, to: to, last: t }; }
+    clearTimeout(skipTimer);
+    skipTimer = setTimeout(flushSkip, 10000);
+  }
+  function flushSkip() {
+    var r = skipRun;
+    skipRun = null;
+    if (r && r.to - r.from >= 45) logSkip(r.ep, r.show, r.from, r.to, r.clean);
+  }
+  function logSkip(ep, show, from, to, clean) {
+    if (!HA) return;
+    var auth = { Authorization: 'Bearer ' + GH.haToken, 'Content-Type': 'application/json' };
+    request('GET', HA + '/api/states/' + SKIPS, null, auth, function (j) {
+      var skips = (j && j.attributes && j.attributes.skips) || {};
+      (skips[ep.id] = skips[ep.id] || []).push([Math.floor(from), Math.floor(to), clean ? 1 : 0, now(), show.id]);
+      // The newest 300, none older than 60 days.
+      var rows = [];
+      Object.keys(skips).forEach(function (id) { (skips[id] || []).forEach(function (r) { rows.push([id, r]); }); });
+      rows = rows.filter(function (x) { return x[1][3] > now() - 60 * 86400; }).sort(function (a, b) { return b[1][3] - a[1][3]; }).slice(0, 300);
+      var out = {};
+      rows.forEach(function (x) { (out[x[0]] = out[x[0]] || []).push(x[1]); });
+      request('POST', HA + '/api/states/' + SKIPS, {
+        state: String(rows.length),
+        attributes: { friendly_name: 'Podcast skips', icon: 'mdi:skip-forward', skips: out }
+      }, auth, function () { /* best effort */ });
+    });
+  }
+
   // ---------- state ----------
   var rows = [];             // [{ label, kind: 'eps'|'shows', items }]
   var view = null;           // browse | show | audio
@@ -206,11 +289,13 @@
   var current = null;        // show open in the show view
   var listFocus = 0;
   var media = null;
-  var playing = null;        // { ep, show, from }
+  var playing = null;        // { ep, show, from, queue, ads (adfree index entry), clean (playing the ad-free copy),
+                             //   copyExtras (chapters/transcript from the second pass) }
   var speed = 1;
   var SPEEDS = [0.8, 1, 1.2, 1.5, 1.75, 2];
   var saveTimer = null;
   var syncTimer = null;
+  var adTimer = null;        // looks for the ad-free copy while the original plays
   var COLS = 6;
 
   var CATS = ['News & Politics', 'Ideas & Culture', 'Science', 'History & Legends', 'Mysteries & UFOs', 'Tech',
@@ -422,6 +507,8 @@
   function stopMedia() {
     clearInterval(saveTimer);
     clearInterval(syncTimer);
+    clearInterval(adTimer);
+    flushSkip();
     if (media) {
       savePosition();
       try { media.pause(); media.removeAttribute('src'); media.load(); } catch (e) { /* gone */ }
@@ -438,7 +525,13 @@
     if (!media || !playing || !isFinite(media.duration) || !media.duration) return;
     var t = media.currentTime;
     if (t < 10) return;
-    setProgress(playing.ep, playing.show, t, media.duration, media.duration - t < 45);
+    var ads = playing.ads;
+    if (ads && ads.f && !playing.clean) {
+      // The original, with the ad-free copy known: keep the place in the copy's time.
+      setProgress(playing.ep, playing.show, toClean(ads.cuts, t), ads.d, media.duration - t < 45, true);
+      return;
+    }
+    setProgress(playing.ep, playing.show, t, media.duration, media.duration - t < 45, onClean());
   }
 
   function finished(ep, show) {
@@ -455,26 +548,31 @@
   function play(ep, show, from, queue) {
     stopMedia();
     view = 'audio';
-    playing = { ep: ep, show: show, from: from, queue: queue || null };
-    var p = progress[ep.id];
-    var at = p && !p[2] ? p[0] : 0;
+    playing = { ep: ep, show: show, from: from, queue: queue || null, ads: null, clean: false };
+    var me = playing;
     clear(root);
     var page = el('div', 'lib-audio');
     media = document.createElement('audio');
     media.className = 'lib-media';
     media.preload = 'auto';
-    media.src = ep.u;
-    media.addEventListener('loadedmetadata', function once() {
-      media.removeEventListener('loadedmetadata', once);
-      try { if (at > 5) media.currentTime = Math.max(0, at - 5); media.playbackRate = speed; } catch (e) { /* from the start */ }
-    });
     media.addEventListener('ended', function () {
       if (sleepEnd) { sleepEnd = false; }
       finished(ep, show);
     });
-    media.addEventListener('error', function () { status('Couldn’t play this episode. Its host may be down; try again later.'); });
+    media.addEventListener('error', function () {
+      // The ad-free copy unreachable: back to the original, at the same place.
+      if (playing && playing.clean && playing.ads) {
+        var t = toOrig(playing.ads.cuts, media.currentTime || 0);
+        playing.clean = false;
+        playing.ads = null;
+        media.src = playing.ep.u;
+        startAt(t + 5, true);
+        return;
+      }
+      status('Couldn’t play this episode. Its host may be down; try again later.');
+    });
     media.addEventListener('waiting', function () { status('Loading…'); });
-    media.addEventListener('playing', function () { status(''); try { media.playbackRate = speed; } catch (e) { /* 1x */ } });
+    media.addEventListener('playing', function () { status(quiet()); try { media.playbackRate = speed; } catch (e) { /* 1x */ } });
     media.addEventListener('timeupdate', tick);
     page.appendChild(media);
     var art = el('div', 'lib-audio-art');
@@ -495,13 +593,32 @@
     root.appendChild(page);
     renderSub();
     renderKeys();
-    var pr = media.play();
-    if (pr && pr.catch) pr.catch(function () { /* autoplay refused: OK starts it */ });
+    status('Loading…');
+    // The ad-free copy if there is one; otherwise the original, checking for one now and then.
+    adInfo(ep.id, function (info) {
+      if (playing !== me || !media) return;
+      me.ads = info;
+      var p = progress[ep.id];
+      var at = p && !p[2] ? p[0] : 0;
+      if (info && info.f) {
+        me.clean = true;
+        if (p && !p[5]) at = toClean(info.cuts, at);
+        media.src = cleanUrl(ep.id, info);
+      } else {
+        if (p && p[5] && info) at = toOrig(info.cuts, at);
+        media.src = ep.u;
+      }
+      startAt(at, true);
+      if (info && info.x) useCopyExtras(me);
+      if (!info || !info.x) watchForAds(me);
+    });
     saveTimer = setInterval(savePosition, 10000);
     syncTimer = setInterval(function () { savePosition(); sync(); }, 120000);
+    // Soon after starting, so the laptop sees what's playing and starts on its ads.
+    setTimeout(function () { if (playing === me) { savePosition(); sync(); } }, 20000);
     if (ep.e) {
       get(BASE + 'extras/' + ep.id + '.json', function (x) {
-        if (!playing || playing.ep !== ep || !x) return;
+        if (!playing || playing.ep !== ep || !x || playing.copyExtras) return;
         extras = x;
         renderSub();
         renderKeys();
@@ -509,10 +626,69 @@
     }
   }
 
+  function startAt(at, play) {
+    media.addEventListener('loadedmetadata', function once() {
+      media.removeEventListener('loadedmetadata', once);
+      try { if (at > 5) media.currentTime = Math.max(0, at - 5); media.playbackRate = speed; } catch (e) { /* from the start */ }
+    });
+    if (play) { var pr = media.play(); if (pr && pr.catch) pr.catch(function () { /* autoplay refused: OK starts it */ }); }
+  }
+  // While an episode plays without its ad-free copy or its second pass, look for them (the laptop
+  // starts on an episode when it starts) every 30 s for 40 minutes. A copy is switched to at the
+  // same place in the show; a second pass brings skips, chapters and the transcript.
+  function watchForAds(me) {
+    var since = Date.now();
+    clearInterval(adTimer);
+    adTimer = setInterval(function () {
+      if (playing !== me || !media || Date.now() - since > 40 * 60000) { clearInterval(adTimer); return; }
+      adInfo(me.ep.id, function (info) {
+        if (playing !== me || !media || !info) return;
+        var fresh = !me.ads;
+        if (me.ads && me.ads.at !== info.at && me.clean) return;   // a re-cut copy: not this one any more
+        me.ads = info;
+        if (info.x) { clearInterval(adTimer); useCopyExtras(me); }
+        if (!fresh || !info.f || me.clean) return;
+        var at = toClean(info.cuts, media.currentTime);
+        var wasPlaying = !media.paused;
+        flushSkip();
+        me.clean = true;
+        media.src = cleanUrl(me.ep.id, info);
+        startAt(at, wasPlaying);
+        flash('Ads removed', 4000);
+      });
+    }, 30000);
+  }
+  // Chapters and transcript from the second pass, in the time of the audio playing.
+  function useCopyExtras(me) {
+    if (me.copyExtras || (me.ads.f && !me.clean)) return;
+    get(BASE + 'adfree/' + me.ep.id + '.extras.json?v=' + me.ads.at, function (x) {
+      if (playing !== me || !x) return;
+      me.copyExtras = true;
+      extras = x;
+      renderSub();
+      renderKeys();
+    });
+  }
+  // A sponsor read the second pass found: over it, by itself.
+  function skipAt(t) {
+    var ads = playing && playing.ads;
+    if (!ads || !ads.skip || (ads.f && !playing.clean)) return null;
+    for (var i = 0; i < ads.skip.length; i++) if (t >= ads.skip[i][0] + 0.5 && t < ads.skip[i][1] - 1) return ads.skip[i];
+    return null;
+  }
+
   function status(text) {
     var n = root.querySelector('.lib-hud-status');
     if (n) n.textContent = text;
   }
+  // A short notice ("Ads removed") that outlasts the Loading… of the jump that caused it.
+  var notice = { text: '', until: 0 };
+  function flash(text, ms) {
+    notice = { text: text, until: Date.now() + ms };
+    status(text);
+    setTimeout(function () { if (Date.now() >= notice.until && playing) status(maybeAt(media ? media.currentTime : 0) ? SPONSOR : ''); }, ms + 50);
+  }
+  function quiet() { return Date.now() < notice.until ? notice.text : ''; }
   function chapterAt(t) {
     var cs = extras && extras.chapters;
     if (!cs) return -1;
@@ -533,9 +709,12 @@
     if (!n) return;
     n.textContent = menu ? '▲▼ choose · ◀▶ change · OK select · Back close'
       : trOpen ? 'OK pause · ◀ 15 s · ▶ 30 s · ▲▼ pick a line, OK jump there · Back hide transcript'
+      : media && maybeAt(media.currentTime) ? 'OK pause · ◀ 15 s · ▶ 30 s · ⏩ skip the sponsor · Back stop'
       : 'OK pause · ◀ 15 s · ▶ 30 s · ▼ menu' + (extras && extras.chapters ? ' · ⏪⏩ chapter' : '') + ' · Back stop';
   }
   var lastSub = -2;
+  var lastMaybe = null;
+  var SPONSOR = 'Sponsor message? ⏩ skips it';
   function tick() {
     if (!media) return;
     var d = media.duration;
@@ -554,12 +733,33 @@
     }
     var ci = chapterAt(media.currentTime);
     if (ci !== lastSub) { lastSub = ci; renderSub(); }
+    // A sponsor read the second pass found: skip it (not reported as your skip; it's known already).
+    var sk = !media.paused && skipAt(media.currentTime);
+    if (sk) {
+      try { media.currentTime = sk[1]; } catch (e) { /* not seekable yet */ }
+      flash('Skipped a sponsor read (' + Math.round(sk[1] - sk[0]) + ' s)', 3000);
+    }
+    // A flagged sponsor read: say so (unless something else is being said, like Loading…).
+    var mb = maybeAt(media.currentTime);
+    var shown = root.querySelector('.lib-hud-status');
+    if (mb !== lastMaybe) { lastMaybe = mb; if (!quiet()) status(mb ? SPONSOR : ''); renderKeys(); }
+    else if (mb && shown && !shown.textContent) status(SPONSOR);
     if (trOpen) renderTranscript();
   }
   function seek(d) {
     if (!media || !isFinite(media.duration)) return;
+    var from = media.currentTime;
     media.currentTime = Math.max(0, Math.min(media.duration - 1, media.currentTime + d));
+    noteSeek(from, media.currentTime);
     tick();
+  }
+  // FF over a flagged sponsor read: to its end, and tell the laptop it was one.
+  function skipSponsor() {
+    var mb = media && maybeAt(media.currentTime);
+    if (!mb) return false;
+    logSkip(playing.ep, playing.show, mb[0], mb[1], onClean());
+    seekTo(mb[1]);
+    return true;
   }
   function seekTo(t) {
     if (!media) return;
@@ -780,6 +980,7 @@
     }
     if (view === 'audio') {
       if (k === K.PLAYPAUSE || k === K.PLAY || k === K.PAUSE) { if (!e.repeat) togglePause(); return; }
+      if (k === K.FF && !e.repeat && skipSponsor()) return;
       if (k === K.REW || k === K.FF) { if (!e.repeat) { if (extras && extras.chapters) chapterJump(k === K.REW ? -1 : 1); else seek(k === K.REW ? -15 : 30); } return; }
       if (menu) { menuKey(k); return; }
       if (k === K.LEFT) { seek(-15); return; }
@@ -819,7 +1020,7 @@
       if (!first) return;
       var queue = (c.queue || []).map(castItem).filter(Boolean);
       // Start where the phone was (play() backs up 5 s from the saved place).
-      progress[first.ep.id] = [Math.floor(c.pos || 0) + 5, Math.floor(first.ep.s || 0), 0, now(), first.show.id];
+      progress[first.ep.id] = [Math.floor(c.pos || 0) + 5, Math.floor(first.ep.s || 0), 0, now(), first.show.id, c.clean ? 1 : 0];
       persist();
       if (c.speed && SPEEDS.indexOf(c.speed) >= 0) speed = c.speed;
       if (!view) open();

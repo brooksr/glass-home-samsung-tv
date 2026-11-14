@@ -69,20 +69,26 @@ data class Book(val show: Show, val desc: String, val secs: Int, val chapters: L
     val id get() = show.id
 }
 
-data class Chapter(val start: Int, val title: String)
+/** [points]: what's said there, in a few short phrases (the second pass, tools/podcasts/deep.py). */
+data class Chapter(val start: Int, val title: String, val points: List<String> = emptyList())
 data class Line(val start: Int, val speaker: String, val text: String)
 /** [estimated]: an audiobook's text, its timing spread over the part by paragraph length rather than known. */
-data class Extras(val chapters: List<Chapter>, val lines: List<Line>, val timed: Boolean, val estimated: Boolean = false)
+/** [summary] and [description] (the feed's, without its advertising): from the second pass, else empty. */
+data class Extras(val chapters: List<Chapter>, val lines: List<Line>, val timed: Boolean, val estimated: Boolean = false,
+                  val summary: String = "", val description: String? = null)
 
-/** Shared with the TV through Home Assistant as [t, dur, done, at, showId]. */
-data class Progress(val t: Int, val dur: Int, val done: Boolean, val at: Long, val showId: String) {
-    fun toJson() = JSONArray().put(t).put(dur).put(if (done) 1 else 0).put(at).put(showId)
+/**
+ * Shared with the TV through Home Assistant as [t, dur, done, at, showId, clean].
+ * [clean]: [t] and [dur] are in the ad-free copy's time (see [AdFree]), not the original's.
+ */
+data class Progress(val t: Int, val dur: Int, val done: Boolean, val at: Long, val showId: String, val clean: Boolean = false) {
+    fun toJson() = JSONArray().put(t).put(dur).put(if (done) 1 else 0).put(at).put(showId).put(if (clean) 1 else 0)
     val fraction: Float get() = if (dur > 0) (t.toFloat() / dur).coerceIn(0f, 1f) else 0f
 
     companion object {
         fun from(a: JSONArray?): Progress? {
             if (a == null || a.length() < 4) return null
-            return Progress(a.optInt(0), a.optInt(1), a.optInt(2) == 1, a.optLong(3), a.optString(4, ""))
+            return Progress(a.optInt(0), a.optInt(1), a.optInt(2) == 1, a.optLong(3), a.optString(4, ""), a.optInt(5) == 1)
         }
     }
 }
@@ -337,6 +343,7 @@ class Repo(private val context: Context) {
             }
             refreshAdded(everything)
             loadContinuing()
+            AdFree.refresh()
             sync()
         } finally {
             _refreshing.value = false
@@ -542,6 +549,8 @@ class Repo(private val context: Context) {
 
     /** Read straight from the feed's links, so it works away from home too. */
     suspend fun extras(e: Episode): Extras = withContext(Dispatchers.IO) {
+        // The second pass's (tools/podcasts/deep.py), in the time of the audio playing: the ad-free copy's.
+        if (AdFree.plays(e.id) || AdFree.info(e.id)?.file == false) secondPass(e)?.let { return@withContext it }
         extrasCache[e.id]?.let { return@withContext it }
         book(e.showId)?.let { b -> return@withContext Extras(emptyList(), bookLines(b, e), timed = true, estimated = true) }
         val show = show(e.showId)
@@ -559,6 +568,47 @@ class Repo(private val context: Context) {
             parseTranscript(e.transcriptType, raw)
         }.getOrDefault(emptyList())
         Extras(chapters, lines, timed).also { if (chapters.isNotEmpty() || lines.isNotEmpty()) extrasCache[e.id] = it }
+    }
+
+    /**
+     * The second pass's chapters (with points), transcript, summary and cleaned description, from
+     * Home Assistant (cached once fetched). Its times are the ad-free copy's.
+     */
+    suspend fun secondPass(e: Episode): Extras? = withContext(Dispatchers.IO) {
+        extrasCache["x:" + e.id]?.let { return@withContext it }
+        val url = AdFree.extrasUrl(e.id) ?: return@withContext null
+        runCatching {
+            val j = JSONObject(httpText(url, 8000)!!)
+            val chapters = j.optJSONArray("chapters")?.let { a -> (0 until a.length()).map { a.getJSONObject(it) }.map { c ->
+                Chapter(c.optInt("t"), c.optString("n"), c.optJSONArray("p")?.let { p -> (0 until p.length()).map { p.getString(it) } }.orEmpty())
+            } }.orEmpty()
+            val lines = j.optJSONObject("transcript")?.optJSONArray("lines")?.let { a -> (0 until a.length()).map { a.getJSONObject(it) }
+                .map { Line(it.optInt("t"), it.optString("s"), it.optString("x")) } }.orEmpty()
+            Extras(chapters.takeIf { it.size > 1 }.orEmpty(), lines, timed = true, summary = j.optString("summary"),
+                description = if (j.has("description")) j.optString("description") else null).also { extrasCache["x:" + e.id] = it }
+        }.getOrNull()
+    }
+
+    /**
+     * Asks the laptop to make [e]'s ad-free copy soon (both passes), when it hasn't: queued episodes
+     * come right after what's playing (sensor.roche_podcasts_requests: episode ID -> unix time).
+     */
+    suspend fun requestAdFree(e: Episode) = withContext(Dispatchers.IO) {
+        val base = haBase ?: return@withContext
+        if (e.youtubeOnly || e.showId.startsWith(BOOK) || AdFree.info(e.id) != null) return@withContext
+        runCatching {
+            val raw = httpText("$base/api/states/sensor.roche_podcasts_requests", 5000, auth = true)
+            val old = raw?.let { JSONObject(it).optJSONObject("attributes")?.optJSONObject("requests") } ?: JSONObject()
+            val now = System.currentTimeMillis() / 1000
+            val keep = old.keys().asSequence().map { it to old.optLong(it) }.filter { now - it.second < 2 * 86400 }
+                .sortedByDescending { it.second }.take(40).toMutableList()
+            keep.removeAll { it.first == e.id }
+            keep.add(0, e.id to now)
+            val body = JSONObject().put("state", keep.size.toString()).put("attributes", JSONObject()
+                .put("friendly_name", "Podcast ad-free requests").put("icon", "mdi:playlist-check")
+                .put("requests", JSONObject().apply { keep.forEach { (k, v) -> put(k, v) } }))
+            httpPost("$base/api/states/sensor.roche_podcasts_requests", body.toString())
+        }
     }
 
     // ---------- queue (episode IDs; the player holds the real one) ----------
@@ -582,14 +632,14 @@ class Repo(private val context: Context) {
         write("opened.json", JSONArray(_opened.value.toList()).toString())
     }
 
-    fun setProgress(id: String, showId: String, t: Int, dur: Int, done: Boolean) {
-        _progress.update { it + (id to Progress(t, dur, done, System.currentTimeMillis() / 1000, showId)) }
+    fun setProgress(id: String, showId: String, t: Int, dur: Int, done: Boolean, clean: Boolean = false) {
+        _progress.update { it + (id to Progress(t, dur, done, System.currentTimeMillis() / 1000, showId, clean)) }
         saveProgress()
     }
 
     fun setPlayed(e: Episode, played: Boolean) {
         val old = _progress.value[e.id]
-        setProgress(e.id, e.showId, if (played) (old?.dur ?: e.duration) else 0, old?.dur ?: e.duration, played)
+        setProgress(e.id, e.showId, if (played) (old?.dur ?: e.duration) else 0, old?.dur ?: e.duration, played, old?.clean == true)
     }
 
     private fun saveProgress() {
@@ -638,6 +688,32 @@ class Repo(private val context: Context) {
         }
     }
 
+    // ---------- skips (for tools/podcasts/adfree.py) ----------
+
+    /**
+     * Notes a stretch skipped with +30 s presses on the entity the laptop reads
+     * (sensor.roche_podcasts_skips: episode ID -> [[from, to, clean, at, showId]]),
+     * the newest 300 from the last 60 days. [clean]: seconds in the ad-free copy's time.
+     */
+    suspend fun logSkip(id: String, showId: String, from: Int, to: Int, clean: Boolean) = withContext(Dispatchers.IO) {
+        val base = haBase ?: return@withContext
+        if (showId.startsWith(BOOK) || showId == "radio") return@withContext
+        runCatching {
+            val raw = httpText("$base/api/states/sensor.roche_podcasts_skips", 5000, auth = true)
+            val skips = raw?.let { JSONObject(it).optJSONObject("attributes")?.optJSONObject("skips") } ?: JSONObject()
+            val now = System.currentTimeMillis() / 1000
+            (skips.optJSONArray(id) ?: JSONArray().also { skips.put(id, it) })
+                .put(JSONArray().put(from).put(to).put(if (clean) 1 else 0).put(now).put(showId))
+            val rows = skips.keys().asSequence().flatMap { k -> skips.getJSONArray(k).let { a -> (0 until a.length()).map { k to a.getJSONArray(it) } } }
+                .filter { it.second.optLong(3) > now - 60 * 86400 }.sortedByDescending { it.second.optLong(3) }.take(300).toList()
+            val out = JSONObject()
+            rows.forEach { (k, r) -> (out.optJSONArray(k) ?: JSONArray().also { out.put(k, it) }).put(r) }
+            val body = JSONObject().put("state", rows.size.toString()).put("attributes",
+                JSONObject().put("friendly_name", "Podcast skips").put("icon", "mdi:skip-forward").put("skips", out))
+            httpPost("$base/api/states/sensor.roche_podcasts_skips", body.toString())
+        }
+    }
+
     // ---------- cast to the TV ----------
 
     /** Home Assistant is set up, so the TV can be cast to. */
@@ -648,7 +724,7 @@ class Repo(private val context: Context) {
      * what's up next to an entity the TV checks every few seconds (app/js/podcasts.js).
      * False when Home Assistant can't be reached.
      */
-    suspend fun castToTv(e: Episode, posSec: Int, speed: Float, upNext: List<Episode>): Boolean = withContext(Dispatchers.IO) {
+    suspend fun castToTv(e: Episode, posSec: Int, speed: Float, upNext: List<Episode>, clean: Boolean = false): Boolean = withContext(Dispatchers.IO) {
         val base = haBase ?: return@withContext false
         fun showOf(x: Episode) = show(x.showId).let { s ->
             JSONObject().put("id", x.showId).put("title", s?.title.orEmpty()).put("art", s?.art.orEmpty())
@@ -659,7 +735,7 @@ class Repo(private val context: Context) {
             .put("friendly_name", "Podcast cast to the TV").put("icon", "mdi:cast")
             .put("at", System.currentTimeMillis() / 1000)
             .put("ep", epOf(e)).put("show", showOf(e))
-            .put("pos", posSec).put("speed", speed.toDouble())
+            .put("pos", posSec).put("clean", clean).put("speed", speed.toDouble())
             .put("queue", JSONArray().apply { upNext.filter { !it.youtubeOnly }.take(40).forEach { put(JSONObject().put("ep", epOf(it)).put("show", showOf(it))) } })
         val body = JSONObject().put("state", e.title.take(250)).put("attributes", attrs)
         runCatching { httpPost("$base/api/states/sensor.roche_podcasts_cast", body.toString()) }.isSuccess
@@ -751,6 +827,25 @@ class Repo(private val context: Context) {
             t = t.replace(Regex("\\s+"), " ").trim()
             if (limit > 0 && t.length > limit) t = t.take(limit).substringBeforeLast(' ') + "…"
             return t
+        }
+
+        private val AD_LINE = Regex("(?i)(sponsor|promo code|use (the )?code|\\bcode [a-z0-9]{3,}|% off|percent off|free trial|ad ?choices|" +
+            "privacy (policy|notice)|advertis|brought to you by|learn more about your ad|support (for )?(this|the) (show|podcast) comes from|" +
+            "go to [a-z0-9-]+\\.(com|co|io)/|visit [a-z0-9-]+\\.(com|co|io)/|hosted (on|by) (acast|megaphone|simplecast|art19)|" +
+            "omnystudio\\.com/listener|podtrac|chartable|see pcm\\.adswizz|money[- ]back|sitewide|up to \\d+ ?%|\\d+ ?% (off|discount)|" +
+            "https?://(www\\.)?(buy|shop|try|get)[a-z0-9-]*\\.|\\.com/[a-z0-9]+ (for|to get)|exclusive (offer|deal|discount)|" +
+            "prizepicks|draftkings|fanduel|betmgm|caesars ?sportsbook|underdog ?fantasy|sleeper\\.com|bet365|fanatics ?sportsbook|\\bgambling problem|1-800-gambler)")
+
+        /**
+         * A feed's description without its advertising: sentences and lines with sponsor offers,
+         * promo codes and ad notices. A rough cut; the second pass's [Extras.description] is better.
+         */
+        fun cleanDesc(text: String): String {
+            if (!AD_LINE.containsMatchIn(text)) return text
+            val parts = text.split(Regex("(?<=[.!?…])\\s+|\\s+--\\s+|\\s*\\n+\\s*|\\s*\\*\\*\\s*"))
+            // Also lines that were only there to separate the ads ("-----").
+            return parts.filterNot { AD_LINE.containsMatchIn(it) || it.isNotBlank() && it.none { c -> c.isLetterOrDigit() } }
+                .joinToString(" ").replace(Regex("\\s+"), " ").replace(Regex("[-_=*~]{4,}"), "").trim()
         }
 
         fun jsonChapters(raw: String): List<Chapter> {

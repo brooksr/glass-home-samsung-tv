@@ -28,6 +28,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /** The sleep timer, set from the player screen and run by the service (same process). */
 object Sleep {
@@ -46,6 +47,11 @@ object Sleep {
  * was left. Saves the place every 10 s, on pause and when switching episode;
  * shares it with Home Assistant on pause and every 2 minutes while playing.
  *
+ * Ads: an episode with an ad-free copy on Home Assistant plays it at home ([AdFree]); one
+ * whose copy appears while it plays (the laptop starts on an episode when it's started)
+ * switches to it at the same place. Away, the original plays as it is. Runs of forward seeks (45 s or more, with any
+ * small step back after) are reported for tools/podcasts/adfree.py to learn from.
+ *
  * Also a media library for Android Auto (Ford SYNC 3 and 4 run it): Continue,
  * Latest, Shows (each show's episodes) and Books (shelves, books, parts). A
  * book part picked in the car queues the rest of the book; a car connecting
@@ -60,6 +66,18 @@ class PlaybackService : MediaLibraryService() {
     private var ticks = 0
     /** The episode and place as of the last tick, to save when the item changes. */
     private var last: Triple<MediaItem, Long, Long>? = null
+    /** Seeks made here (resuming, skipping a cut ad), not by the listener: not reported as skips. */
+    private var ownSeeks = 0
+    /** When the current item started, to look for its ad-free copy for a while. */
+    private var itemStarted = 0L
+    private var startedId: String? = null
+    private var lookingForCopy = false
+
+    /** A run of forward seeks being made by the listener. */
+    private class SkipRun(val id: String, val showId: String, val clean: Boolean, val from: Long, var to: Long, var last: Long)
+    private var skipRun: SkipRun? = null
+
+    private fun seekOwn(p: Player, ms: Long) { ownSeeks++; p.seekTo(ms) }
 
     private val ticker = object : Runnable {
         override fun run() {
@@ -68,7 +86,12 @@ class PlaybackService : MediaLibraryService() {
                 p.currentMediaItem?.let { last = Triple(it, p.currentPosition, p.duration) }
                 if (++ticks % 10 == 0) save(p)
                 if (ticks % 120 == 0) scope.launch { repo.sync() }
+                // Early on, so the laptop sees what's playing and starts on its ads.
+                if (System.currentTimeMillis() - itemStarted in 20_000L..20_999L) { save(p); scope.launch { repo.sync() } }
+                skipRead(p)
+                if (ticks % 30 == 0) lookForCopy(p)
             }
+            skipRun?.let { if (System.currentTimeMillis() - it.last > 10_000) flushSkip() }
             val until = Sleep.until.value
             if (until > 0 && System.currentTimeMillis() >= until) {
                 Sleep.off()
@@ -90,6 +113,7 @@ class PlaybackService : MediaLibraryService() {
             .build()
         player.addListener(object : Player.Listener {
             override fun onIsPlayingChanged(isPlaying: Boolean) {
+                if (isPlaying) toCopy(player, fromStart = System.currentTimeMillis() - itemStarted < 5000)
                 if (!isPlaying) {
                     save(player)
                     saveQueue(player)
@@ -115,6 +139,14 @@ class PlaybackService : MediaLibraryService() {
             override fun onMediaItemTransition(item: MediaItem?, reason: Int) {
                 val prev = last
                 last = null
+                if (item?.mediaId != startedId) {
+                    flushSkip()
+                    startedId = item?.mediaId
+                    itemStarted = System.currentTimeMillis()
+                    ownSeeks = 0
+                    // Queued as the original before its copy was known (or by an older version): the copy now.
+                    handler.post { toCopy(player, fromStart = true) }
+                }
                 if (prev != null && prev.first.mediaId != item?.mediaId) {
                     if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO) {
                         // Played to the end and moved on: mark it, drop it from the queue.
@@ -128,10 +160,31 @@ class PlaybackService : MediaLibraryService() {
                 }
                 // Start the new one where it was left.
                 if (item != null && reason != Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED) {
-                    val p = repo.progress.value[item.mediaId]
-                    if (p != null && !p.done && p.t > 15 && player.currentPosition < 2000) player.seekTo((p.t - 5) * 1000L)
+                    val ms = AdFree.startMs(item.mediaId, repo.progress.value[item.mediaId], cleanOf(item))
+                    if (ms > 0 && player.currentPosition < 2000) seekOwn(player, ms)
                 }
                 saveQueue(player)
+            }
+
+            override fun onPositionDiscontinuity(old: Player.PositionInfo, new: Player.PositionInfo, reason: Int) {
+                if (reason != Player.DISCONTINUITY_REASON_SEEK) return
+                if (ownSeeks > 0) { ownSeeks--; return }
+                val item = player.currentMediaItem ?: return
+                if (old.mediaItem?.mediaId != item.mediaId || new.mediaItem?.mediaId != item.mediaId) return
+                noteSeek(item, old.positionMs, new.positionMs)
+            }
+
+            // The ad-free copy unreachable (left home mid-episode): the original, at the same place.
+            override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
+                val item = player.currentMediaItem ?: return
+                if (!cleanOf(item)) return
+                val e = repo.episode(item.mediaId) ?: return
+                val at = AdFree.info(e.id)?.toOrig(player.currentPosition / 1000.0) ?: 0.0
+                AdFree.markAway()
+                player.replaceMediaItem(player.currentMediaItemIndex, item(e, repo.show(e.showId), original = true))
+                seekOwn(player, (at * 1000).toLong())
+                player.prepare()
+                player.play()
             }
 
             override fun onTimelineChanged(timeline: Timeline, reason: Int) { saveQueue(player) }
@@ -166,7 +219,88 @@ class PlaybackService : MediaLibraryService() {
     private fun saveItem(item: MediaItem, pos: Long, dur: Long) {
         if (item.mediaId.startsWith(Station.PREFIX)) return   // live radio has no place to keep
         if (dur == C.TIME_UNSET || dur <= 0 || pos < 10_000) return
-        repo.setProgress(item.mediaId, showIdOf(item), (pos / 1000).toInt(), (dur / 1000).toInt(), dur - pos < 45_000)
+        val done = dur - pos < 45_000
+        val info = AdFree.info(item.mediaId)
+        if (!cleanOf(item) && info?.file == true) {
+            // The original, with an ad-free copy known: the place is kept in the copy's time.
+            repo.setProgress(item.mediaId, showIdOf(item), info.toClean(pos / 1000.0).toInt(), info.dur.toInt(), done, clean = true)
+            return
+        }
+        repo.setProgress(item.mediaId, showIdOf(item), (pos / 1000).toInt(), (dur / 1000).toInt(), done, cleanOf(item))
+    }
+
+    // ---------- ads ----------
+
+    /**
+     * The original playing while its ad-free copy can be played: switch to the copy. [fromStart]: the
+     * episode has only just started, at its saved place, so the copy starts at the saved place too
+     * (exact); later, the place is converted from the original's time (close: its ads differ).
+     */
+    private fun toCopy(p: Player, fromStart: Boolean) {
+        val item = p.currentMediaItem ?: return
+        if (cleanOf(item) || !AdFree.plays(item.mediaId)) return
+        val e = repo.episode(item.mediaId) ?: return
+        val info = AdFree.info(e.id) ?: return
+        val saved = repo.progress.value[e.id]
+        val at = if (fromStart && (p.currentPosition < 2000 || kotlin.math.abs(p.currentPosition - AdFree.startMs(e.id, saved, clean = false)) < 15_000)) {
+            AdFree.startMs(e.id, saved, clean = true)
+        } else {
+            ((info.toClean(p.currentPosition / 1000.0) - 3).coerceAtLeast(0.0) * 1000).toLong()
+        }
+        flushSkip()
+        p.replaceMediaItem(p.currentMediaItemIndex, item(e, repo.show(e.showId)))
+        seekOwn(p, at)
+    }
+
+    /** Over a sponsor read the second pass found (not reported as your skip: it's known already). */
+    private fun skipRead(p: Player) {
+        val item = p.currentMediaItem ?: return
+        val cut = AdFree.info(item.mediaId)?.skipAt(p.currentPosition / 1000.0, cleanOf(item)) ?: return
+        seekOwn(p, (cut.end * 1000).toLong())
+    }
+
+    /**
+     * Playing at home without the ad-free copy or its second pass yet (the laptop starts on an episode
+     * when it starts): check the index every 30 s for 40 minutes. A copy is switched to at the same
+     * place; a second pass brings skips, chapters and the transcript. Away, try now and then.
+     */
+    private fun lookForCopy(p: Player) {
+        val item = p.currentMediaItem ?: return
+        if (lookingForCopy || item.mediaId.startsWith(Station.PREFIX)) return
+        val e = repo.episode(item.mediaId) ?: return
+        if (e.showId.startsWith(Repo.BOOK)) return
+        val info = AdFree.info(e.id)
+        val clean = cleanOf(item)
+        if (info?.extras == true && (clean || !info.file)) return                     // nothing more to come
+        if (info != null && !clean && !AdFree.plays(e.id) && System.currentTimeMillis() % 300_000 > 30_000) return   // away
+        if (System.currentTimeMillis() - itemStarted > 40 * 60_000L && (info == null || clean)) return
+        lookingForCopy = true
+        scope.launch {
+            val home = withContext(Dispatchers.IO) { AdFree.refresh() }
+            lookingForCopy = false
+            val now = p.currentMediaItem ?: return@launch
+            if (home && now.mediaId == e.id) toCopy(p, fromStart = false)
+        }
+    }
+
+    // A run of forward seeks within 10 s of each other (and any small step back after), 45 s or more in all.
+    private fun noteSeek(item: MediaItem, from: Long, to: Long) {
+        val now = System.currentTimeMillis()
+        val run = skipRun
+        if (run != null && run.id == item.mediaId && now - run.last < 10_000) {
+            run.to = to
+            run.last = now
+        } else if (to > from) {
+            flushSkip()
+            skipRun = SkipRun(item.mediaId, showIdOf(item), cleanOf(item), from, to, now)
+        }
+    }
+
+    private fun flushSkip() {
+        val r = skipRun ?: return
+        skipRun = null
+        if (r.to - r.from < 45_000 || r.to - r.from > 300_000 || r.id.startsWith(Station.PREFIX)) return
+        scope.launch { repo.logSkip(r.id, r.showId, (r.from / 1000).toInt(), (r.to / 1000).toInt(), r.clean) }
     }
 
     private fun save(p: Player) {
@@ -285,7 +419,7 @@ class PlaybackService : MediaLibraryService() {
         if (q.isEmpty()) {
             val (eps, cur) = repo.loadQueue()
             val p = eps.getOrNull(cur)?.let { progress[it.id] }
-            return eps.map { item(it, repo.show(it.showId)) }.drop(cur) to (if (p != null && !p.done) p.t * 1000L else 0L)
+            return eps.map { item(it, repo.show(it.showId)) }.drop(cur) to eps.getOrNull(cur)?.let { AdFree.startMs(it.id, p, back = 0) }.let { it ?: 0L }
         }
         // "Left Right and Center" finds "Left, Right & Center": compared without case, punctuation or "&".
         val nq = norm(q)
@@ -379,7 +513,7 @@ class PlaybackService : MediaLibraryService() {
             return listOf(station(st)) to C.TIME_UNSET
         }
         val progress = repo.progress.value
-        fun startOf(e: Episode) = progress[e.id]?.takeIf { !it.done && it.t > 15 }?.let { (it.t - 5) * 1000L } ?: 0L
+        fun startOf(e: Episode) = AdFree.startMs(e.id, progress[e.id])
         if (id.startsWith("resume:")) {
             val b = repo.book(id.removePrefix("resume:")) ?: return emptyList<MediaItem>() to 0L
             val from = resumeAt(b, progress) ?: 0
@@ -460,7 +594,7 @@ class PlaybackService : MediaLibraryService() {
             if (eps.isEmpty()) return Futures.immediateFailedFuture(UnsupportedOperationException("nothing queued"))
             val p = repo.progress.value[eps[cur].id]
             return Futures.immediateFuture(MediaItemsWithStartPosition(eps.map { item(it, repo.show(it.showId)) }, cur,
-                if (p != null && !p.done) p.t * 1000L else 0L))
+                AdFree.startMs(eps[cur].id, p, back = 0)))
         }
     }
 
@@ -502,18 +636,28 @@ class PlaybackService : MediaLibraryService() {
                 .build())
             .build()
 
-        fun item(e: Episode, show: Show?): MediaItem = MediaItem.Builder()
+        /** Played from the ad-free copy (see [AdFree]). */
+        fun cleanOf(item: MediaItem) = item.mediaMetadata.extras?.getBoolean("clean") == true
+
+        /** [e] to play: its ad-free copy when there is one and Home Assistant can be reached, unless [original]. */
+        fun item(e: Episode, show: Show?, original: Boolean = false): MediaItem {
+            val clean = !original && AdFree.plays(e.id)
+            val url = (if (clean) AdFree.url(e.id) else null) ?: e.url
+            return itemFrom(e, show, url, clean && url != e.url)
+        }
+
+        private fun itemFrom(e: Episode, show: Show?, url: String, clean: Boolean): MediaItem = MediaItem.Builder()
             .setMediaId(e.id)
-            .setUri(e.url)
-            .setRequestMetadata(MediaItem.RequestMetadata.Builder().setMediaUri(android.net.Uri.parse(e.url)).build())
+            .setUri(url)
+            .setRequestMetadata(MediaItem.RequestMetadata.Builder().setMediaUri(android.net.Uri.parse(url)).build())
             .setMediaMetadata(MediaMetadata.Builder()
-                .setTitle(e.title)
+                .setTitle(Headline.tame(e.title))
                 .setArtist(show?.title)
                 .setAlbumTitle(show?.title)
                 .setArtworkUri(show?.art?.takeIf { it.isNotEmpty() }?.let { android.net.Uri.parse(it) })
                 .setMediaType(if (e.showId.startsWith(Repo.BOOK)) MediaMetadata.MEDIA_TYPE_AUDIO_BOOK_CHAPTER else MediaMetadata.MEDIA_TYPE_PODCAST_EPISODE)
                 .setIsBrowsable(false).setIsPlayable(true)
-                .setExtras(Bundle().apply { putString("showId", e.showId) })
+                .setExtras(Bundle().apply { putString("showId", e.showId); putBoolean("clean", clean) })
                 .build())
             .build()
     }

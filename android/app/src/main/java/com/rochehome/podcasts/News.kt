@@ -57,7 +57,7 @@ class News(private val context: Context) {
             _articles.value = (0 until a.length()).map { a.getJSONObject(it) }.map {
                 Article(it.getString("id"), it.getString("source"), it.getString("category"), it.getString("title"), it.getString("link"),
                     it.getLong("date"), it.optString("summary"), it.optString("image"), it.optString("publisher"))
-            }
+            }.filterNot(::isAd)
         }
         runCatching {
             val a = JSONArray(File(dir, "read.json").readText())
@@ -116,13 +116,30 @@ class News(private val context: Context) {
                 return@repeat
             }
             try {
-                return if (code == 200) c.inputStream.buffered().use { parse(f, it) }.take(25) else emptyList()
+                return if (code == 200) c.inputStream.buffered().use { parse(f, it) }.filterNot(::isAd).take(25) else emptyList()
             } finally { c.disconnect() }
         }
         return emptyList()
     }
 
     companion object {
+        // Advertising that papers syndicate into their feeds (the VC Star's Google News feed carries
+        // USA Today's shopping and betting posts): offers, deals, odds pages, ticket pushes, press releases.
+        private val AD = Regex("(?i)(\\b\\d+% off\\b|\\bsave (up to )?(\\$|\\d)|\\bstarts? at (just )?\\$|\\bjust \\$\\d|\\bon sale\\b|\\bdeals?\\b|" +
+            "\\bcoupons?\\b|\\bpromo codes?\\b|\\bget tickets\\b|\\btickets (now|on sale)\\b|five-star reviews|\\bwe tested\\b|\\bbuy(ing)? guide\\b|" +
+            "\\bgift (ideas|guide)\\b|\\bodds,? picks\\b|\\bbetting odds\\b|\\bprop bets\\b|\\bpicks and predictions\\b|\\bsportsbook\\b|" +
+            "\\bpress release\\b|\\bsponsored\\b|\\bpaid content\\b|\\$\\d[\\d,]*(\\.\\d\\d)? (pair|set|deal)|\\bauto[- ]deliver)")
+        private val PRESS = Regex("\\b(Strengthens|Launches|Unveils|Announces|Introduces|Expands|Partners|Debuts)\\b")
+
+        /** An advertisement, not news; or nothing at all (an empty headline). */
+        fun isAd(a: Article): Boolean {
+            val t = a.title.trim()
+            if (t.isEmpty() || AD.containsMatchIn(t)) return true
+            // "ComplyCube Strengthens Digital Trust with Qualified eSignatures": a press release's Title Case.
+            val words = t.split(Regex("\\s+")).filter { it.first().isLetter() }
+            return words.size >= 5 && words.count { it.first().isUpperCase() } >= words.size * 0.8 && PRESS.containsMatchIn(t)
+        }
+
         private val formats = listOf("EEE, dd MMM yyyy HH:mm:ss Z", "EEE, dd MMM yyyy HH:mm:ss zzz", "EEE, dd MMM yyyy HH:mm Z",
             "yyyy-MM-dd'T'HH:mm:ssXXX", "yyyy-MM-dd'T'HH:mm:ss.SSSXXX", "yyyy-MM-dd'T'HH:mm:ss'Z'", "yyyy-MM-dd")
 

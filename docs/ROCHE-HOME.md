@@ -158,6 +158,16 @@ remembered per show.
   by `build.py` on the HA laptop; the audio streams from each podcast's host.
 - Progress is shared with the phone through `sensor.roche_podcasts` (see
   [tools/podcasts](../tools/podcasts/README.md#listening-progress)).
+- **Ads**: episodes being listened to, and new ones of the shows listened to
+  regularly, get an ad-free copy made on the laptop (`adfree.py`, see
+  [tools/podcasts](../tools/podcasts/README.md#ad-free-copies)); it plays in
+  place of the original, and an episode whose copy is made while it plays
+  switches to it (*Ads removed*). A likely sponsor read left in shows
+  *Sponsor message? ⏩ skips it*. Runs of +30 s presses are reported to
+  `sensor.roche_podcasts_skips` so the laptop learns what you skip.
+  A second pass transcribes each episode (on the M5 MacBook, or the laptop) and a model
+  marks the host's own sponsor reads, which are then skipped as they come (*Skipped a sponsor
+  read*), and its chapters and transcript, which replace the feed's in the menu.
 
 **Android app** (`android/`, package `com.rochehome.podcasts`, launcher name
 Podcasts): Latest, Shows and News tabs. Episodes that are also on YouTube
@@ -337,7 +347,7 @@ Pluto, Tubi, …): those come from the same servers as the shows.
 - **Roche Home:** on the TV, **Apps → ⚙ → Roche Home → Delete**. Turn
   **Autorun Smart Hub** back on. Revoke its HA token.
 - **TV network:** IP and DNS back to **Obtain automatically** (table above).
-- **Podcasts:** remove the cron line on the HA laptop, delete `~/roche-podcasts` there and `$HA_WWW/roche-home/podcasts`; uninstall the phone app.
+- **Podcasts:** remove the cron line on the HA laptop, `sudo systemctl disable --now roche-adfree` and delete `/etc/systemd/system/roche-adfree.service`, delete `~/roche-podcasts` there and `$HA_WWW/roche-home/podcasts`; uninstall the phone app. (ffmpeg and libchromaprint-tools were installed for `adfree.py`.)
 - **Pi-hole:** see the revert steps in `../rpi/README.md`.
 - **Mac tools:** delete `~/tizen-studio`, `~/tizen-studio-data`,
   `~/.package-manager`, `~/.tizen`, `~/.tizen.sdk.path.config`,
